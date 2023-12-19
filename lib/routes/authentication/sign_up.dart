@@ -1,8 +1,11 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../services/auth_methods.dart';
 import '../../util/components.dart';
 import '../../util/constants.dart';
+import '../../util/showSnackBar.dart';
+import '../user/home.dart';
 import 'log_in.dart';
 
 class SignUp extends StatefulWidget{
@@ -19,7 +22,24 @@ class _SignUp extends State<SignUp> {
   String passwordController = '';
   String confirmPasswordController = '';
 
-  void _handleSignUp() {
+  void _handleSignUp() async {
+    if (_formKey.currentState != null && _formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      FirebaseAuthMethods authService = FirebaseAuthMethods();
+      try {
+        await authService.handleSignUp(
+          name: nameController,
+          email: emailController,
+          password: passwordController,
+          confirmpassword: confirmPasswordController,
+          context: context,
+        );
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => Home()));
+      } catch (e) {
+        throw Exception('Error creating the user: $e');
+      }
+    }
   }
 
   @override
@@ -67,8 +87,8 @@ class _SignUp extends State<SignUp> {
                                               'Name', 'Enter your name'),
                                           validator: (value) {
                                             if (value == null || value.isEmpty) {
-                                              // showSnackBar( context, 'Please complete all fields.');
-                                              // throw Exception('Field cannot be empty.');
+                                              showSnackBar( context, 'Please complete all fields.');
+                                              throw Exception('Field cannot be empty.');
                                             }
                                             return null;
                                           },
@@ -87,8 +107,8 @@ class _SignUp extends State<SignUp> {
                                               'E-mail', 'Enter your e-mail'),
                                           validator: (value) {
                                             if (value == null || value.isEmpty) {
-                                              // showSnackBar( context, 'Please complete all fields.');
-                                              // throw Exception('Field cannot be empty.');
+                                              showSnackBar( context, 'Please complete all fields.');
+                                              throw Exception('Field cannot be empty.');
                                             }
                                             return null;
                                           },
@@ -108,8 +128,8 @@ class _SignUp extends State<SignUp> {
                                               'Password', 'Enter your password'),
                                           validator: (value) {
                                             if (value == null || value.isEmpty) {
-                                              // showSnackBar( context, 'Please complete all fields.');
-                                              // throw Exception('Field cannot be empty.');
+                                              showSnackBar( context, 'Please complete all fields.');
+                                              throw Exception('Field cannot be empty.');
                                             }
                                             return null;
                                           },
@@ -129,8 +149,8 @@ class _SignUp extends State<SignUp> {
                                               'Repeat your password'),
                                           validator: (value) {
                                             if (value == null || value.isEmpty) {
-                                              // showSnackBar( context, 'Please complete all fields.');
-                                              // throw Exception('Field cannot be empty.');
+                                              showSnackBar( context, 'Please complete all fields.');
+                                              throw Exception('Field cannot be empty.');
                                             }
                                             return null;
                                           },
