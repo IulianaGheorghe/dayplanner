@@ -3,8 +3,11 @@ import 'package:dayplanner/routes/authentication/sign_up.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../services/auth_methods.dart';
 import '../../util/components.dart';
 import '../../util/constants.dart';
+import '../../util/showSnackBar.dart';
+import '../user/home.dart';
 
 class LogIn extends StatefulWidget{
   const LogIn({super.key});
@@ -16,6 +19,19 @@ class LogIn extends StatefulWidget{
 class _LogInState extends State<LogIn>{
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
+  final FirebaseAuthMethods _authService = FirebaseAuthMethods();
+
+  Future<void> _handleLogIn() async {
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
+
+    await _authService.handleLogIn(
+      email: email,
+      password: password,
+      context: context,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,13 +97,13 @@ class _LogInState extends State<LogIn>{
                     ElevatedButton(
                       key: const Key("logInButton"),
                       onPressed: () async {
-                        // try {
-                        //   String role = await _handleLogIn();
-                        //     Navigator.push(context,
-                        //         MaterialPageRoute(builder: (context) => Home()));
-                        // } catch (e) {
-                        //   showSnackBar(context, 'User does not exist: $e');
-                        // }
+                        try {
+                          await _handleLogIn();
+                          Navigator.push(context,
+                                MaterialPageRoute(builder: (context) => Home()));
+                        } catch (e) {
+                          showSnackBar(context, 'User does not exist: $e');
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                           shape: const StadiumBorder(),
