@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dayplanner/routes/authentication/sign_up.dart';
 import 'package:flutter/material.dart';
 
 import '../../util/constants.dart';
@@ -74,9 +75,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  // Navigator.push(context,
-                  //   MaterialPageRoute(builder: (context) => const SignUp()),
-                  // );
+                  Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => const SignUp()),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                     shape: const StadiumBorder(),

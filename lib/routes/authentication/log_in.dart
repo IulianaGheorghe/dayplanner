@@ -1,3 +1,4 @@
+import 'package:dayplanner/routes/authentication/sign_up.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -120,7 +121,7 @@ class _LogInState extends State<LogIn>{
                                   style: const TextStyle(color: questionTextColor, fontSize: questionSize, fontFamily: font2),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = (){
-                                      // Navigator.push(context, MaterialPageRoute(builder: (context) => const SignUp()));
+                                      Navigator.push(context, MaterialPageRoute(builder: (context) => const SignUp()));
                                     },
                                 ),
                               ]
