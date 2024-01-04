@@ -1,8 +1,10 @@
 import 'package:dayplanner/routes/authentication/welcome.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../../services/auth_methods.dart';
 import '../../util/components.dart';
 import '../../util/constants.dart';
+import '../../util/showSnackBar.dart';
 
 class ResetPassword extends StatefulWidget{
   const ResetPassword({super.key});
@@ -14,7 +16,15 @@ class ResetPassword extends StatefulWidget{
 class _ResetPassword extends State<ResetPassword>{
   final emailController = TextEditingController();
 
-  Future<void> _handlePassReset() async {
+  final FirebaseAuthMethods _authService = FirebaseAuthMethods();
+
+  Future<void> _handleResetPassword() async {
+    String email = emailController.text.trim();
+
+    await _authService.handleResetPassword(
+      email: email,
+      context: context,
+    );
   }
 
   @override
@@ -59,11 +69,11 @@ class _ResetPassword extends State<ResetPassword>{
                     const SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: () async {
-                        // try {
-                        //   _handlePassReset();
-                        // } catch (e) {
-                        //   showSnackBar(context, 'Email does not exist: $e');
-                        // }
+                        try {
+                          _handleResetPassword();
+                        } catch (e) {
+                          showSnackBar(context, 'Email does not exist: $e');
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                           shape: const StadiumBorder(),

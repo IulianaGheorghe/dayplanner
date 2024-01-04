@@ -72,5 +72,25 @@ class FirebaseAuthMethods {
     }
   }
 
+  Future<void> handleResetPassword({
+    required String email,
+    required BuildContext context,
+  }) async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
+
+    try {
+      if (await doesUserExist(email)) {
+        await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+        showSnackBar(context, 'Password Reset Email Sent');
+      } else {
+        showSnackBar(context, 'Email is not valid');
+      }
+    } on FirebaseAuthException catch (e) {
+      print(e);
+      showSnackBar(context, e.message!);
+    }
+  }
+
 }
 
