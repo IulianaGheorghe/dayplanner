@@ -1,3 +1,4 @@
+import 'package:dayplanner/util/navigationBar.dart';
 import 'package:flutter/material.dart';
 import '../../util/constants.dart';
 
@@ -12,10 +13,11 @@ class _HomeState extends State<Home>{
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: const Text('Home'),
+    return const Scaffold(
+        body: Center(
+
         ),
+      bottomNavigationBar: MyBottomNavigationBar(),
     );
   }
 }
