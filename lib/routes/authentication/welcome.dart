@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:dayplanner/routes/authentication/sign_up.dart';
 import 'package:flutter/material.dart';
 
@@ -60,14 +59,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                     shape: const StadiumBorder(),
-                    fixedSize: const Size(buttonWidth, buttonHeight),
+                    fixedSize: const Size(welcomeButtonWidth, buttonHeight),
                     textStyle: const TextStyle(
                         fontSize: buttonText,
                         fontWeight: FontWeight.bold
                     ),
-                    side: const BorderSide(color: buttonBorderColor, width: 2),
-                    backgroundColor: buttonColor,
-                    foregroundColor: buttonTextColor,
+                    side: const BorderSide(color: welcomeButtonBorderColor, width: 2),
+                    backgroundColor: buttonTextColor,
+                    foregroundColor: welcomeButtonColor,
                     elevation: 15
                 ),
                 child: const Text("Log in"),
@@ -81,13 +80,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                     shape: const StadiumBorder(),
-                    fixedSize: const Size(buttonWidth, buttonHeight),
+                    fixedSize: const Size(welcomeButtonWidth, buttonHeight),
                     textStyle: const TextStyle(
                         fontSize: buttonText,
                         fontWeight: FontWeight.bold
                     ),
-                    side: const BorderSide(color: buttonBorderColor, width: 2),
-                    backgroundColor: buttonColor,
+                    side: const BorderSide(color: welcomeButtonBorderColor, width: 2),
+                    backgroundColor: welcomeButtonColor,
                     foregroundColor: buttonTextColor,
                     elevation: 15
                 ),

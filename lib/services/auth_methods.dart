@@ -21,7 +21,7 @@ class FirebaseAuthMethods {
     required String name,
     required String email,
     required String password,
-    required String confirmpassword,
+    required String confirmPassword,
     required BuildContext context,
   }) async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +32,7 @@ class FirebaseAuthMethods {
       throw Exception('An user with same email already exists!');
     } else {
       try {
-        if (password != confirmpassword) {
+        if (password != confirmPassword) {
           throw Exception('Passwords do not match.');
         }
         if (email == '' || name == '' || password == '') {
@@ -47,7 +47,7 @@ class FirebaseAuthMethods {
           'email': email
         });
       } catch (e) {
-        showSnackBar(context, '$e');
+        showSnackBar(context, e.toString());
         throw Exception('Failed to create user: $e');
       }
     }
@@ -87,7 +87,6 @@ class FirebaseAuthMethods {
         showSnackBar(context, 'Email is not valid');
       }
     } on FirebaseAuthException catch (e) {
-      print(e);
       showSnackBar(context, e.message!);
     }
   }

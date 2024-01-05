@@ -31,7 +31,7 @@ class _SignUp extends State<SignUp> {
           name: nameController,
           email: emailController,
           password: passwordController,
-          confirmpassword: confirmPasswordController,
+          confirmPassword: confirmPasswordController,
           context: context,
         );
         Navigator.push(context,

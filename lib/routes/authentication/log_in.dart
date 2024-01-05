@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import '../../services/auth_methods.dart';
 import '../../util/components.dart';
 import '../../util/constants.dart';
-import '../../util/showSnackBar.dart';
 import '../user/home.dart';
 
 class LogIn extends StatefulWidget{
@@ -102,7 +101,7 @@ class _LogInState extends State<LogIn>{
                           Navigator.push(context,
                                 MaterialPageRoute(builder: (context) => Home()));
                         } catch (e) {
-                          showSnackBar(context, 'User does not exist: $e');
+                          throw Exception('Error logging the user: $e');
                         }
                       },
                       style: ElevatedButton.styleFrom(
