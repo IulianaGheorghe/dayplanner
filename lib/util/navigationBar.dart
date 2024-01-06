@@ -1,6 +1,10 @@
 import 'package:dayplanner/util/constants.dart';
 import 'package:flutter/material.dart';
 
+import '../routes/user/account.dart';
+import '../routes/user/calendar.dart';
+import '../routes/user/home.dart';
+
 class MyBottomNavigationBar extends StatefulWidget {
   const MyBottomNavigationBar({super.key});
 
@@ -9,36 +13,17 @@ class MyBottomNavigationBar extends StatefulWidget {
 }
 
 class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
-  int _selectedIndex = 0;
-  static const TextStyle optionStyle = TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
-
-  static const List<Widget> _widgetOptions = <Widget>[
-    Text(
-      'Index 0: Home',
-      style: optionStyle,
-    ),
-    Text(
-      'Index 1: Calendar',
-      style: optionStyle,
-    ),
-    Text(
-      'Index 2: You',
-      style: optionStyle,
-    ),
+  int index = 0;
+  final screens = [
+    const Home(),
+    const Calendar(),
+    const Account(),
   ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
-      ),
+      body: screens[index],
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -50,13 +35,14 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
             label: 'Calendar',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.perm_identity),
+            icon: Icon(Icons.person),
             label: 'You',
           ),
         ],
-        currentIndex: _selectedIndex,
+        currentIndex: index,
         selectedItemColor: primaryColor,
-        onTap: _onItemTapped,
+        onTap: (index) =>
+            setState(() => this.index = index),
       ),
     );
   }
