@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import '../../services/auth_methods.dart';
 import '../../util/components.dart';
 import '../../util/constants.dart';
-import '../user/home.dart';
+import '../../util/navigationBar.dart';
 
 class LogIn extends StatefulWidget{
   const LogIn({super.key});
@@ -99,7 +99,7 @@ class _LogInState extends State<LogIn>{
                         try {
                           await _handleLogIn();
                           Navigator.push(context,
-                                MaterialPageRoute(builder: (context) => Home()));
+                                MaterialPageRoute(builder: (context) => MyBottomNavigationBar()));
                         } catch (e) {
                           throw Exception('Error logging the user: $e');
                         }

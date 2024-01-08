@@ -64,9 +64,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         fontSize: buttonText,
                         fontWeight: FontWeight.bold
                     ),
-                    side: const BorderSide(color: welcomeButtonBorderColor, width: 2),
-                    backgroundColor: buttonTextColor,
-                    foregroundColor: welcomeButtonColor,
+                    side: const BorderSide(color: buttonBorderColor, width: 2),
+                    backgroundColor: primaryColor,
+                    foregroundColor: buttonTextColor,
                     elevation: 15
                 ),
                 child: const Text("Log in"),
@@ -85,8 +85,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         fontSize: buttonText,
                         fontWeight: FontWeight.bold
                     ),
-                    side: const BorderSide(color: welcomeButtonBorderColor, width: 2),
-                    backgroundColor: welcomeButtonColor,
+                    side: const BorderSide(color: buttonBorderColor, width: 2),
+                    backgroundColor: primaryColor,
                     foregroundColor: buttonTextColor,
                     elevation: 15
                 ),
