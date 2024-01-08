@@ -9,6 +9,7 @@ const buttonTextColor = Colors.black;
 const buttonBorderColor = Color(0xff016e68);
 const questionTextColor = Color(0xff7c6b81);
 const inputDecorationColor = primaryColor;
+const newTaskColor = Color(0xff52BF96);
 
 // 0xff7c6b81
 // 0xffb603cc
@@ -23,11 +24,12 @@ const buttonText = 25.0;
 const pageSizeName = 30.0;
 const questionSize = 22.0;
 const boxDataSize = 30.0; // boxes for sign in/log in pages
+const secondaryTitleSize = 20.0;
 
 // -- Fonts
 const String font1 = "Righteous";
 const String font2 = "Lobster";
 
 // Images
-const todoPattern1 = 'assets/images/todo_pattern3.jpg';
+const todoPattern1 = 'assets/images/todo_pattern4.png';
 const todoPattern2 = 'assets/images/todo_pattern2.jpg';

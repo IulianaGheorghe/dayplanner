@@ -91,5 +91,12 @@ class FirebaseAuthMethods {
     }
   }
 
+  Future<String> getUserId() async {
+    String? userID;
+    final user = FirebaseAuth.instance.currentUser;
+    userID = user!.uid;
+
+    return userID;
+  }
 }
 

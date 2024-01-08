@@ -27,3 +27,28 @@ class Box {
   }
 
 }
+
+InputDecoration addPageInputStyle(String labelText) {
+  return InputDecoration(
+    hintText: labelText,
+    hintStyle: const TextStyle(color: Colors.grey),
+    labelStyle: const TextStyle(color: inputDecorationColor),
+    filled: true,
+    fillColor: Colors.white.withOpacity(0.8),
+    border: const OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(10.0)),
+      borderSide: BorderSide.none
+    ),
+  );
+}
+
+Text titleStyle(String title, double size) {
+  return Text(
+      title,
+      style: TextStyle(
+        color: Colors.black,
+        fontSize: size,
+        fontFamily: font1,
+      )
+  );
+}

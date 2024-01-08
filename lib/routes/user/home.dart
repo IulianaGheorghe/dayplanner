@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../util/constants.dart';
+import 'add_task.dart';
 
 class Home extends StatefulWidget{
   const Home({super.key});
@@ -48,11 +49,12 @@ class _HomeState extends State<Home>{
                   const Spacer(),
                   ElevatedButton(
                     onPressed: () {
-
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) => const AddTask()));
                     },
                     style: ElevatedButton.styleFrom(
                         shape: const StadiumBorder(),
-                        fixedSize: const Size(130.0, 50.0),
+                        fixedSize: const Size(141.0, 55.0),
                         textStyle: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold
@@ -62,8 +64,8 @@ class _HomeState extends State<Home>{
                         foregroundColor: buttonTextColor,
                         elevation: 10
                     ),
-                    child: Row(
-                      children: const [
+                    child: const Row(
+                      children: [
                         Icon(
                           Icons.add_circle,
                           color: Colors.black,
