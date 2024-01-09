@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
-
 import 'constants.dart';
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  final Function(LatLng) onLocationSelected;
+
+  const MapScreen({super.key, required this.onLocationSelected});
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -48,9 +49,26 @@ class _MapScreenState extends State<MapScreen> {
               color: Colors.black
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            color: Colors.yellow,
+            onPressed: () {
+              _saveDestination();
+            },
+          ),
+        ],
       ),
       body: _buildMap(),
     );
+  }
+
+  void _saveDestination() async {
+    if (_markers.length >= 2) {
+      LatLng selectedLocation = _markers.elementAt(1).position;
+      widget.onLocationSelected(selectedLocation);
+      Navigator.pop(context);
+    }
   }
 
   Widget _buildMap() {

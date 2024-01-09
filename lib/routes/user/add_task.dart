@@ -1,5 +1,7 @@
+import 'package:dayplanner/util/navigationBar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../services/auth_methods.dart';
 import '../../services/task_services.dart';
 import '../../util/components.dart';
@@ -20,6 +22,8 @@ class _AddTaskState extends State<AddTask>{
   String _description = '';
   DateTime _selectedDate = DateTime.now();
   TimeOfDay? _selectedTime;
+  LatLng? _selectedDestination;
+  bool _destinationSelected = false;
 
   FirebaseAuthMethods authMethods = FirebaseAuthMethods();
 
@@ -55,24 +59,27 @@ class _AddTaskState extends State<AddTask>{
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       String userID = await authMethods.getUserId();
-      final newsAdd = Task(
+      final taskAdd = Task(
         userID,
         _title,
         _description,
+        _selectedDate,
+        _selectedTime!,
+        _selectedDestination!,
         DateTime.now(),
       );
       try {
-        await newsAdd.addToFirestore();
+        await taskAdd.addToFirestore();
         showSnackBar(context, "Task added successfully!");
         Navigator.pop(context);
-        // Navigator.pushReplacement<void, void>(
-        //   context,
-        //   MaterialPageRoute<void>(
-        //     builder: (BuildContext context) => TrainerHome(),
-        //   ),
-        // );
+        Navigator.pushReplacement<void, void>(
+          context,
+          MaterialPageRoute<void>(
+            builder: (BuildContext context) => const MyBottomNavigationBar(),
+          ),
+        );
       } catch (e) {
-        throw Exception('Error adding news to db: $e');
+        throw Exception('Error adding task to db: $e');
       }
     }
   }
@@ -217,7 +224,19 @@ class _AddTaskState extends State<AddTask>{
                     const SizedBox(height: 16),
                     GestureDetector(
                       onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => MapScreen()));
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                            builder: (context) => MapScreen(
+                              onLocationSelected: (LatLng location) {
+                                setState(() {
+                                  _destinationSelected = true;
+                                });
+                                _selectedDestination = location;
+                              },
+                            ),
+                          ),
+                        );
                       },
                       child: Stack(
                         alignment: Alignment.center,
@@ -242,6 +261,13 @@ class _AddTaskState extends State<AddTask>{
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                    Visibility(
+                      visible: _destinationSelected,
+                      child: Text(
+                        'You\'ve selected your destination!',
+                        style: TextStyle(fontSize: 18, color: Colors.lightGreen.shade300, fontWeight: FontWeight.w500),
                       ),
                     ),
                     const SizedBox(height: 16),
