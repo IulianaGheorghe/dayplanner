@@ -64,8 +64,8 @@ class _AddTaskState extends State<AddTask>{
         _title,
         _description,
         _selectedDate,
-        _selectedTime!,
-        _selectedDestination!,
+        _selectedTime,
+        _selectedDestination,
         DateTime.now(),
       );
       try {
@@ -144,12 +144,6 @@ class _AddTaskState extends State<AddTask>{
                       cursorColor: inputDecorationColor,
                       keyboardType: TextInputType.multiline,
                       maxLines: 5,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          showSnackBar(context, 'Please enter a description.');
-                        }
-                        return null;
-                      },
                       onSaved: (value) {
                         _description = value ?? '';
                       },

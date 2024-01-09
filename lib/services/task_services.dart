@@ -7,8 +7,8 @@ class Task {
   String title;
   String description;
   DateTime date;
-  TimeOfDay time;
-  LatLng destination;
+  TimeOfDay? time;
+  LatLng? destination;
   DateTime createdAt;
 
   Task(this.userID, this.title, this.description, this.date, this.time, this.destination, this.createdAt);
@@ -28,8 +28,8 @@ class Task {
                 'title': title,
                 'description': description,
                 'date': date.millisecondsSinceEpoch,
-                'time': time.toString(),
-                'destination': destination.toString(),
+                'time': (time == null) ? '' : "${time!.hour}:${time!.minute}",
+                'destination': (destination == null) ? '' : "${destination!.latitude},${destination!.longitude}",
                 'createdAt': createdAt.toUtc(),
               }
             );
@@ -37,6 +37,5 @@ class Task {
     } catch (e) {
       throw Exception('Task cannot be added to firebase.');
     }
-
   }
 }
