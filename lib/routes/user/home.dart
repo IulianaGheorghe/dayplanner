@@ -80,9 +80,9 @@ class _HomeState extends State<Home>{
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20), // Add some spacing between the button and task list
+                  const SizedBox(height: 20),
                   Expanded(
-                    child: TasksList(), // Include the TasksList widget here
+                    child: TasksList(),
                   ),
                 ],
               ),

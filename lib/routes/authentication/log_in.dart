@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import '../../services/auth_methods.dart';
 import '../../util/components.dart';
 import '../../util/constants.dart';
-import '../../util/navigationBar.dart';
+import '../models/navigationBar.dart';
 
 class LogIn extends StatefulWidget{
   const LogIn({super.key});
