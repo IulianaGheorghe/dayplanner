@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
-import 'constants.dart';
+import '../../config.dart';
+import '../../util/constants.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 
 class MapScreen extends StatefulWidget {
   final Function(LatLng) onLocationSelected;
@@ -15,6 +17,7 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   LocationData? _currentLocation;
   Set<Marker> _markers = Set<Marker>();
+  // List<LatLng> _polylineCoordinates = [];
 
   @override
   void initState() {
@@ -29,7 +32,6 @@ class _MapScreenState extends State<MapScreen> {
       LocationData locationData = await location.getLocation();
       setState(() {
         _currentLocation = locationData;
-        _addMarker(const LatLng(0.0, 0.0));
       });
     } catch (e) {
       Exception('Error getting location: $e');
@@ -52,7 +54,7 @@ class _MapScreenState extends State<MapScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
-            color: Colors.yellow,
+            color: Colors.white,
             onPressed: () {
               _saveDestination();
             },
@@ -64,32 +66,31 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _saveDestination() async {
-    if (_markers.length >= 2) {
-      LatLng selectedLocation = _markers.elementAt(1).position;
+    if (_markers.isNotEmpty) {
+      LatLng selectedLocation = _markers.elementAt(0).position;
       widget.onLocationSelected(selectedLocation);
       Navigator.pop(context);
     }
   }
 
   Widget _buildMap() {
-    if (_currentLocation == null) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
     return GoogleMap(
       onMapCreated: (controller) {
-        setState(() {
-        });
+        setState(() {});
       },
-      initialCameraPosition: CameraPosition(
-        target: LatLng(
-          _currentLocation!.latitude!,
-          _currentLocation!.longitude!,
-        ),
-        zoom: 14,
+      initialCameraPosition: const CameraPosition(
+        target: LatLng(0.0, 0.0),
+        zoom: 2,
       ),
+      myLocationEnabled: true,
+      // polylines: {
+      //   Polyline(
+      //     polylineId: const PolylineId("route"),
+      //     points: _polylineCoordinates,
+      //     color: primaryColor,
+      //     width: 6,
+      //   )
+      // },
       markers: _markers,
       onTap: (LatLng location) {
         _addMarker(location);
@@ -97,36 +98,40 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Marker _newMarker(LatLng location, icon, text) {
-    Marker newMarker = Marker(
-      markerId: MarkerId(location.toString()),
-      position: location,
-      infoWindow: InfoWindow(title: text),
-      icon: icon,
-    );
+  void _addMarker(LatLng? location) async{
+    // PolylinePoints polylinePoints = PolylinePoints();
 
-    return newMarker;
-  }
-
-  void _addMarker(LatLng location) {
     setState(() {
       _markers.clear();
-      _markers.add(
-        _newMarker(
-          LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!,),
-          BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          'Current location'
-        )
-      );
-      if (location != const LatLng(0.0, 0.0)) {
+      // _polylineCoordinates.clear();
+
+      if (location != null) {
         _markers.add(
-            _newMarker(
-                location,
-                BitmapDescriptor.defaultMarker,
-                'Selected location'
-            )
+          Marker(
+            markerId: MarkerId(location.toString()),
+            position: location,
+            infoWindow: const InfoWindow(title: 'Selected location'),
+            icon: BitmapDescriptor.defaultMarker,
+          )
         );
       }
     });
+
+    // if (_currentLocation != null) {
+    //   PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+    //     Config.googleApiKey,
+    //     PointLatLng(_currentLocation!.latitude!, _currentLocation!.longitude!),
+    //     PointLatLng(location!.latitude, location.longitude),
+    //   );
+    //
+    //   if (result.points.isNotEmpty) {
+    //     result.points.forEach(
+    //       (PointLatLng point) => _polylineCoordinates.add(
+    //         LatLng(point.latitude, point.longitude)
+    //       )
+    //     );
+    //     setState(() {});
+    //   }
+    // }
   }
 }
