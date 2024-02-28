@@ -1,0 +1,84 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+class Task {
+  String userID;
+  String title;
+  String description;
+  DateTime date;
+  TimeOfDay? startTime;
+  TimeOfDay? deadline;
+  String priority;
+  LatLng? destination;
+  DateTime createdAt;
+
+  Task(this.userID, this.title, this.description, this.date, this.startTime, this.deadline, this.priority, this.destination, this.createdAt);
+
+  Future<void> addToFirestore() async {
+    final firestore = FirebaseFirestore.instance;
+
+    try {
+      if( title == '') {
+        throw Exception('Field cannot be empty.');
+      } else {
+        await firestore.collection("users")
+            .doc(userID)
+            .collection("tasks")
+            .add(
+              {
+                'title': title,
+                'description': description,
+                'date': date.millisecondsSinceEpoch,
+                'startTime': (startTime == null) ? '' : "${startTime!.hour}:${startTime!.minute}",
+                'deadline': (deadline == null) ? '' : "${deadline!.hour}:${deadline!.minute}",
+                'priority': priority,
+                'destination': (destination == null) ? '' : "${destination!.latitude},${destination!.longitude}",
+                'createdAt': createdAt.toUtc(),
+              }
+            );
+      }
+    } catch (e) {
+      throw Exception('Task cannot be added to firebase.');
+    }
+  }
+}
+
+Future<List<Task>> getTasksForDay(DateTime day, String userID) async {
+  final startOfDay = DateTime(day.year, day.month, day.day);
+  final endOfDay = DateTime(day.year, day.month, day.day, 23, 59, 59, 999);
+
+  QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(userID)
+      .collection('tasks')
+      .where('date', isGreaterThanOrEqualTo: startOfDay.millisecondsSinceEpoch)
+      .where('date', isLessThanOrEqualTo: endOfDay.millisecondsSinceEpoch)
+      .get();
+
+  List<Task> tasks = snapshot.docs.map((doc) {
+    Map<String, dynamic> data = doc.data();
+    return Task(
+        userID,
+        data['title'],
+        data['description'],
+        DateTime.fromMillisecondsSinceEpoch(doc['date']),
+        (doc['startTime'] != '') ?
+          TimeOfDay(hour: int.parse(doc['startTime'].split(':')[0]),
+            minute: int.parse(doc['startTime'].split(':')[1]),
+          ) : null,
+        (doc['deadline'] != '') ?
+          TimeOfDay(hour: int.parse(doc['deadline'].split(':')[0]),
+            minute: int.parse(doc['deadline'].split(':')[1]),
+          ) : null,
+        doc['priority'],
+        (doc['destination'] != '') ?
+          LatLng(double.parse(doc['destination'].split(',')[0]),
+            double.parse(doc['destination'].split(',')[1]),
+          ) : null,
+        (data['createdAt'] as Timestamp).toDate(),
+    );
+  }).toList();
+
+  return tasks;
+}

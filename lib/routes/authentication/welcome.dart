@@ -35,7 +35,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       foreground: Paint()
                         ..style = PaintingStyle.stroke
                         ..strokeWidth = 3.0
-                        ..color = Colors.black,)
+                        ..color = primaryColor,)
                 )
               ),
               Container(
@@ -47,7 +47,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         foreground: Paint()
                           ..style = PaintingStyle.stroke
                           ..strokeWidth = 3.0
-                          ..color = Colors.black,)
+                          ..color = primaryColor,)
                   )
               ),
               const SizedBox(height: 150),

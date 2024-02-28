@@ -36,12 +36,20 @@ dependencies:
   cupertino_icons: ^1.0.2
 
   # Firebase Database
-  cloud_firestore: ^4.13.6
+  cloud_firestore: ^4.14.0
   firebase_core: ^2.24.2
   firebase_auth: ^4.15.3
   firebase_storage: ^11.5.6
 
-  intl: ^0.17.0
+  intl: ^0.18.0
+
+  google_maps_flutter: ^2.5.1
+  location: ^5.0.3
+  flutter_polyline_points: ^2.0.0
+  dio: ^4.0.0
+  google_places_flutter: ^2.0.6
+
+  table_calendar: ^3.0.9
 
 dev_dependencies:
   flutter_test:
@@ -52,7 +60,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^2.0.0
+  flutter_lints: ^3.0.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
