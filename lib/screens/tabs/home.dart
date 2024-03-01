@@ -1,8 +1,8 @@
-import 'package:dayplanner/routes/user/tasks_list.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../util/constants.dart';
-import 'add_task.dart';
+import '../others/task/add_task.dart';
+import '../others/task/tasks_list.dart';
 
 class Home extends StatefulWidget{
   const Home({super.key});

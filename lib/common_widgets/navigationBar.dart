@@ -1,9 +1,9 @@
 import 'package:dayplanner/util/constants.dart';
 import 'package:flutter/material.dart';
 
-import '../user/account.dart';
-import '../user/calendar.dart';
-import '../user/home.dart';
+import '../screens/tabs/account.dart';
+import '../screens/tabs/calendar.dart';
+import '../screens/tabs/home.dart';
 
 class MyBottomNavigationBar extends StatefulWidget {
   const MyBottomNavigationBar({super.key});

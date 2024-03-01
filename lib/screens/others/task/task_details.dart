@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
-import '../../util/constants.dart';
+import '../../../util/constants.dart';
 
 class TaskDetails extends StatelessWidget{
   final String title;

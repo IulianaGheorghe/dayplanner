@@ -1,13 +1,13 @@
-import 'package:dayplanner/routes/models/navigationBar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../services/auth_methods.dart';
-import '../../services/task_services.dart';
-import '../../util/components.dart';
-import '../../util/constants.dart';
-import '../../util/showSnackBar.dart';
-import '../models/map_screen.dart';
+import '../../../common_widgets/map_screen.dart';
+import '../../../common_widgets/navigationBar.dart';
+import '../../../common_widgets/showSnackBar.dart';
+import '../../../services/auth_methods.dart';
+import '../../../services/task_services.dart';
+import '../../../util/components.dart';
+import '../../../util/constants.dart';
 
 String valueChoose = "Low";
 List priorityList = ["Low", "Medium", "High"];

@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dayplanner/routes/user/task_details.dart';
+import 'package:dayplanner/screens/others/task/task_details.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
-import '../../util/constants.dart';
+import '../../../util/constants.dart';
 
 class TasksList extends StatefulWidget {
   const TasksList({super.key});

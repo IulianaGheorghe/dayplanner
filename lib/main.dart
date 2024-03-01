@@ -1,4 +1,4 @@
-import 'package:dayplanner/routes/authentication/welcome.dart';
+import 'package:dayplanner/screens/welcome.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
