@@ -1,8 +1,8 @@
-import 'package:dayplanner/routes/authentication/sign_up.dart';
 import 'package:flutter/material.dart';
 
-import '../../util/constants.dart';
-import 'log_in.dart';
+import '../util/constants.dart';
+import 'others/authentication/log_in.dart';
+import 'others/authentication/sign_up.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});

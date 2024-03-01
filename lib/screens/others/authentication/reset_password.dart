@@ -1,10 +1,10 @@
-import 'package:dayplanner/routes/authentication/welcome.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import '../../services/auth_methods.dart';
-import '../../util/components.dart';
-import '../../util/constants.dart';
-import '../../util/showSnackBar.dart';
+import '../../../common_widgets/showSnackBar.dart';
+import '../../../services/auth_methods.dart';
+import '../../../util/components.dart';
+import '../../../util/constants.dart';
+import '../../welcome.dart';
 
 class ResetPassword extends StatefulWidget{
   const ResetPassword({super.key});

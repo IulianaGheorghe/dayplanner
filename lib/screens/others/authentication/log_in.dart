@@ -1,12 +1,12 @@
-import 'package:dayplanner/routes/authentication/reset_password.dart';
-import 'package:dayplanner/routes/authentication/sign_up.dart';
+import 'package:dayplanner/screens/others/authentication/reset_password.dart';
+import 'package:dayplanner/screens/others/authentication/sign_up.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import '../../services/auth_methods.dart';
-import '../../util/components.dart';
-import '../../util/constants.dart';
-import '../models/navigationBar.dart';
+import '../../../common_widgets/navigationBar.dart';
+import '../../../services/auth_methods.dart';
+import '../../../util/components.dart';
+import '../../../util/constants.dart';
 
 class LogIn extends StatefulWidget{
   const LogIn({super.key});

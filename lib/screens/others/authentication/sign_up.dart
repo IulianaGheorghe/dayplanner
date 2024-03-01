@@ -1,11 +1,11 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import '../../services/auth_methods.dart';
-import '../../util/components.dart';
-import '../../util/constants.dart';
-import '../../util/showSnackBar.dart';
-import '../user/home.dart';
+import '../../../common_widgets/showSnackBar.dart';
+import '../../../services/auth_methods.dart';
+import '../../../util/components.dart';
+import '../../../util/constants.dart';
+import '../../tabs/home.dart';
 import 'log_in.dart';
 
 class SignUp extends StatefulWidget{
