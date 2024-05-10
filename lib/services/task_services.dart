@@ -62,15 +62,14 @@ class Task {
 }
 
 Future<List<Task>> getTasksForDay(DateTime day, String userID) async {
-  final startOfDay = DateTime(day.year, day.month, day.day);
-  final endOfDay = DateTime(day.year, day.month, day.day, 23, 59, 59, 999);
+  String formattedDate = DateFormat('dd-MM-yyyy').format(day);
 
   QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
       .collection('users')
       .doc(userID)
       .collection('tasks')
-      .where('date', isGreaterThanOrEqualTo: startOfDay.millisecondsSinceEpoch)
-      .where('date', isLessThanOrEqualTo: endOfDay.millisecondsSinceEpoch)
+      .doc(formattedDate)
+      .collection("day tasks")
       .get();
 
   List<Task> tasks = snapshot.docs.map((doc) {
@@ -79,7 +78,7 @@ Future<List<Task>> getTasksForDay(DateTime day, String userID) async {
         userID,
         data['title'],
         data['description'],
-        DateTime.fromMillisecondsSinceEpoch(doc['date']),
+        doc['date'].toDate(),
         (doc['startTime'] != '') ?
           TimeOfDay(hour: int.parse(doc['startTime'].split(':')[0]),
             minute: int.parse(doc['startTime'].split(':')[1]),
