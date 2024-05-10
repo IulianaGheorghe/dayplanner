@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
 
 class Task {
   String userID;
@@ -17,26 +18,42 @@ class Task {
 
   Future<void> addToFirestore() async {
     final firestore = FirebaseFirestore.instance;
+    String formattedDate = DateFormat('dd-MM-yyyy').format(date);
 
     try {
       if( title == '') {
         throw Exception('Field cannot be empty.');
       } else {
+        DocumentReference documentRef = firestore.collection("users").doc(userID).collection("tasks").doc(formattedDate);
+        DocumentSnapshot snapshot = await documentRef.get();
+        if (snapshot.exists) {
+          int currentNoOfTasks = snapshot.get('tasksCount');
+          int incrementedValue = currentNoOfTasks + 1;
+          await documentRef.update({'tasksCount': incrementedValue});
+        } else {
+          await firestore.collection("users").doc(userID).collection("tasks")
+              .doc(formattedDate)
+              .set({'tasksCount': 1})
+              .catchError((error) => throw Exception("Failed to create document for day in tasks: $error"));
+        }
+
         await firestore.collection("users")
             .doc(userID)
             .collection("tasks")
+            .doc(formattedDate)
+            .collection("day tasks")
             .add(
-              {
-                'title': title,
-                'description': description,
-                'date': date.millisecondsSinceEpoch,
-                'startTime': (startTime == null) ? '' : "${startTime!.hour}:${startTime!.minute}",
-                'deadline': (deadline == null) ? '' : "${deadline!.hour}:${deadline!.minute}",
-                'priority': priority,
-                'destination': (destination == null) ? '' : "${destination!.latitude},${destination!.longitude}",
-                'createdAt': createdAt.toUtc(),
-              }
-            );
+            {
+              'title': title,
+              'description': description,
+              'date': Timestamp.fromDate(date),
+              'startTime': (startTime == null) ? '' : "${startTime!.hour}:${startTime!.minute}",
+              'deadline': (deadline == null) ? '' : "${deadline!.hour}:${deadline!.minute}",
+              'priority': priority,
+              'destination': (destination == null) ? '' : "${destination!.latitude},${destination!.longitude}",
+              'createdAt': createdAt.toUtc(),
+            }
+          );
       }
     } catch (e) {
       throw Exception('Task cannot be added to firebase.');
