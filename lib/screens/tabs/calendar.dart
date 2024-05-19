@@ -1,6 +1,7 @@
 import 'package:dayplanner/util/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../services/task_services.dart';
@@ -18,8 +19,7 @@ class _CalendarState extends State<Calendar>{
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
   CalendarFormat _calendarFormat = CalendarFormat.month;
-  Map<DateTime, int> _tasksCount = {}; // Map to store number of tasks for each day
-  Map<DateTime, List<Task>> _tasksByDate = {}; // Map to store tasks grouped by date
+  Map<String, int> _tasksCount = {};
 
   @override
   void initState() {
@@ -27,28 +27,14 @@ class _CalendarState extends State<Calendar>{
 
     User? user = FirebaseAuth.instance.currentUser;
     userID = user!.uid;
-    fetchTasksForTimeFrame(DateTime.now(), DateTime.now().add(Duration(days: 30)));
+    _updateTasksCount(_focusedDay);
   }
 
-  // Fetch tasks for a specific time frame and group them by date
-  Future<void> fetchTasksForTimeFrame(DateTime startDate, DateTime endDate) async {
-    // Fetch tasks from database within the specified time frame
-    // List<Task> tasks = await getTasksForTimeFrame(startDate, endDate, userID);
-
-    // Group tasks by date
-    _tasksByDate.clear();
-    // tasks.forEach((task) {
-    //   final date = task.date;
-    //   _tasksByDate.update(date, (value) => value + [task], ifAbsent: () => [task]);
-    // });
-
-    // Calculate task counts for each date
-    _tasksCount.clear();
-    _tasksByDate.forEach((date, tasks) {
-      _tasksCount[date] = tasks.length;
+  Future<void> _updateTasksCount(DateTime dateTime) async {
+    Map<String, int> tasksCount = await getTasksCountForMonth(dateTime, userID);
+    setState(() {
+      _tasksCount = tasksCount;
     });
-
-    setState(() {}); // Update the UI
   }
 
   @override
@@ -82,6 +68,23 @@ class _CalendarState extends State<Calendar>{
                                 _focusedDay = focusedDay;
                               });
                             },
+                            onPageChanged: (focusedDay) {
+                              int selectedMonth = focusedDay.month;
+                              int currentMonth = DateTime.now().month;
+                              if (selectedMonth != currentMonth) {
+                                setState(() {
+                                  _selectedDay = DateTime(focusedDay.year, focusedDay.month, 1);
+                                  _focusedDay = focusedDay;
+                                  _updateTasksCount(_focusedDay);
+                                });
+                              } else {
+                                setState(() {
+                                  _selectedDay = DateTime.now();
+                                  _focusedDay = focusedDay;
+                                  _updateTasksCount(_focusedDay);
+                                });
+                              }
+                            },
                             calendarStyle: CalendarStyle(
                               todayDecoration: BoxDecoration(
                                 color: Colors.yellow.shade600,
@@ -112,29 +115,34 @@ class _CalendarState extends State<Calendar>{
                             },
                             calendarBuilders: CalendarBuilders(
                               markerBuilder: (context, date, events) {
-                                final tasksCount = _tasksCount[date];
-                                return Positioned(
-                                  right: 1,
-                                  top: -6,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    width: 18,
-                                    height: 18,
-                                    child: Center(
-                                      child: Text(
-                                        tasksCount != null ? '$tasksCount' : '',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
+                                String dateString = DateFormat('dd-MM-yyyy').format(date);
+                                final tasksCount = _tasksCount[dateString];
+                                if (tasksCount != null) {
+                                  return Positioned(
+                                    right: 1,
+                                    top: -6,
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.lightBlue,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      width: 18,
+                                      height: 18,
+                                      child: Center(
+                                        child: Text(
+                                          '$tasksCount',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
+                                  );
+                                } else {
+                                  return null;
+                                }
                               },
                             ),
                           ),

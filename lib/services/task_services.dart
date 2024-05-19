@@ -33,7 +33,7 @@ class Task {
         } else {
           await firestore.collection("users").doc(userID).collection("tasks")
               .doc(formattedDate)
-              .set({'tasksCount': 1})
+              .set({'date': date, 'tasksCount': 1})
               .catchError((error) => throw Exception("Failed to create document for day in tasks: $error"));
         }
 
@@ -97,4 +97,29 @@ Future<List<Task>> getTasksForDay(DateTime day, String userID) async {
   }).toList();
 
   return tasks;
+}
+
+Future<Map<String, int>> getTasksCountForMonth(DateTime focusedDay, String userID) async {
+  DateTime firstDayOfMonth = DateTime(focusedDay.year, focusedDay.month, 1);
+  DateTime lastDayOfMonth = DateTime(focusedDay.year, focusedDay.month + 1, 0);
+
+  int firstDayWeekday = firstDayOfMonth.weekday;
+  DateTime firstVisibleDay = firstDayOfMonth.subtract(Duration(days: firstDayWeekday - 1));
+  int lastDayWeekday = lastDayOfMonth.weekday;
+  DateTime lastVisibleDay = lastDayOfMonth.add(Duration(days: 7 - lastDayWeekday));
+
+  QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(userID)
+      .collection('tasks')
+      .where('date', isGreaterThanOrEqualTo: firstVisibleDay, isLessThanOrEqualTo: lastVisibleDay)
+      .get();
+
+  Map<String, int> tasksCount = {};
+  for (var doc in snapshot.docs) {
+    String taskDay = doc.id;
+    tasksCount[taskDay] = doc.data()['tasksCount'];
+  }
+
+  return tasksCount;
 }
