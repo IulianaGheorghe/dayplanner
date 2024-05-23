@@ -11,8 +11,9 @@ class TaskDetails extends StatelessWidget{
   final TimeOfDay? deadline;
   final String priority;
   final LatLng? destination;
+  final String status;
 
-  const TaskDetails({super.key, required this.title, required this.description, required this.date, required this.startTime, required this.deadline, required this.priority, required this.destination});
+  const TaskDetails({super.key, required this.title, required this.description, required this.date, required this.startTime, required this.deadline, required this.priority, required this.destination, required this.status});
 
   @override
   Widget build(BuildContext context) {

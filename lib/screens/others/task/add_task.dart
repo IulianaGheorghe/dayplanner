@@ -29,6 +29,7 @@ class _AddTaskState extends State<AddTask>{
   LatLng? _selectedDestination;
   bool _destinationSelected = false;
   String _selectedPriority = "Low";
+  String _status = "To do";
 
   FirebaseAuthMethods authMethods = FirebaseAuthMethods();
 
@@ -86,6 +87,7 @@ class _AddTaskState extends State<AddTask>{
         _selectedDeadline,
         _selectedPriority,
         _selectedDestination,
+        _status,
         DateTime.now(),
       );
       try {
@@ -392,18 +394,5 @@ class _AddTaskState extends State<AddTask>{
 
   String formatTime(TimeOfDay time) {
     return '${time.hour}:${time.minute}';
-  }
-
-  Color getColorForPriority(String option) {
-    switch (option) {
-      case 'Low':
-        return Colors.blue;
-      case 'Medium':
-        return Colors.orange;
-      case 'High':
-        return Colors.red;
-      default:
-        return Colors.white;
-    }
   }
 }

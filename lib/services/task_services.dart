@@ -12,9 +12,10 @@ class Task {
   TimeOfDay? deadline;
   String priority;
   LatLng? destination;
+  String status;
   DateTime createdAt;
 
-  Task(this.userID, this.title, this.description, this.date, this.startTime, this.deadline, this.priority, this.destination, this.createdAt);
+  Task(this.userID, this.title, this.description, this.date, this.startTime, this.deadline, this.priority, this.destination, this.status, this.createdAt);
 
   Future<void> addToFirestore() async {
     final firestore = FirebaseFirestore.instance;
@@ -51,6 +52,7 @@ class Task {
               'deadline': (deadline == null) ? '' : "${deadline!.hour}:${deadline!.minute}",
               'priority': priority,
               'destination': (destination == null) ? '' : "${destination!.latitude},${destination!.longitude}",
+              'status': status,
               'createdAt': createdAt.toUtc(),
             }
           );
@@ -92,6 +94,7 @@ Future<List<Task>> getTasksForDay(DateTime day, String userID) async {
           LatLng(double.parse(doc['destination'].split(',')[0]),
             double.parse(doc['destination'].split(',')[1]),
           ) : null,
+        doc['status'],
         (data['createdAt'] as Timestamp).toDate(),
     );
   }).toList();
@@ -122,4 +125,61 @@ Future<Map<String, int>> getTasksCountForMonth(DateTime focusedDay, String userI
   }
 
   return tasksCount;
+}
+
+Future<void> updateStatus(String userID, String task, String formattedDate, String status) async {
+  await FirebaseFirestore.instance
+      .collection("users")
+      .doc(userID)
+      .collection("tasks")
+      .doc(formattedDate)
+      .collection("day tasks")
+      .doc(task)
+      .update({'status': status});
+}
+
+Future<List<Map<String, dynamic>>> getTasksDetails(String userID) async {
+  final todayDate = DateTime.now();
+  String formattedDate = DateFormat('dd-MM-yyyy').format(todayDate);
+  List<Map<String, dynamic>> tasksData = [];
+
+  final snapshot = await FirebaseFirestore.instance
+      .collection("users")
+      .doc(userID)
+      .collection("tasks")
+      .doc(formattedDate)
+      .collection("day tasks")
+      .get();
+
+  if (snapshot.docs.isNotEmpty) {
+    tasksData = snapshot.docs.map((doc) {
+      return {
+        'id': doc.id,
+        'title': doc['title'],
+        'description': doc['description'],
+        'date': doc['date'].toDate(),
+        'startTime': (doc['startTime'] != '')
+            ? TimeOfDay(
+          hour: int.parse(doc['startTime'].split(':')[0]),
+          minute: int.parse(doc['startTime'].split(':')[1]),
+        )
+            : null,
+        'deadline': (doc['deadline'] != '')
+            ? TimeOfDay(
+          hour: int.parse(doc['deadline'].split(':')[0]),
+          minute: int.parse(doc['deadline'].split(':')[1]),
+        )
+            : null,
+        'priority': doc['priority'],
+        'destination': (doc['destination'] != '')
+            ? LatLng(
+          double.parse(doc['destination'].split(',')[0]),
+          double.parse(doc['destination'].split(',')[1]),
+        )
+            : null,
+        'status': doc['status'],
+      };
+    }).toList();
+  }
+  return tasksData;
 }
