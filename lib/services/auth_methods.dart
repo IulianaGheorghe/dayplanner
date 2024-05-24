@@ -3,6 +3,7 @@ import 'package:dayplanner/services/task_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 import '../common_widgets/showSnackBar.dart';
 
@@ -39,14 +40,19 @@ class FirebaseAuthMethods {
         if (email == '' || name == '' || password == '') {
           throw Exception('Field cannot be empty.');
         }
+
+        var uuid = const Uuid();
+        String randomUserId = uuid.v4();
+
         final credentials = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
         FirebaseFirestore.instance
           .collection('users')
           .doc(credentials.user?.uid)
           .set({
-          'name': name,
-          'email': email
-        });
+            'name': name,
+            'email': email,
+            'id': randomUserId
+          });
 
         addInitialCategories(credentials.user!.uid);
       } catch (e) {
