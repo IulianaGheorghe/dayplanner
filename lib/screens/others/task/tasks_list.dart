@@ -30,7 +30,10 @@ class _TasksListState extends State<TasksList> {
   }
 
   void handleTasksData() async {
-    tasksData = await getTasksDetails(userID!);
+    final tasks = await getTasksDetails(userID!);
+    setState(() {
+      tasksData = tasks;
+    });
   }
 
   @override

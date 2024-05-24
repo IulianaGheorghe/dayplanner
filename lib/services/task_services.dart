@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
@@ -182,4 +183,39 @@ Future<List<Map<String, dynamic>>> getTasksDetails(String userID) async {
     }).toList();
   }
   return tasksData;
+}
+
+Future<void> addCategory(String name, String userID) async {
+  await FirebaseFirestore.instance.collection('users')
+      .doc(userID)
+      .collection('categories')
+      .add({
+    'name': name,
+  });
+}
+
+Future<void> addInitialCategories(String userID) async {
+  await addCategory('Work', userID);
+  await addCategory('Study', userID);
+  await addCategory('Birthdays', userID);
+  await addCategory('Personal', userID);
+  await addCategory('Health', userID);
+  await addCategory('Shopping', userID);
+  await addCategory('Fitness', userID);
+  await addCategory('Events', userID);
+  await addCategory('Household', userID);
+}
+
+Future<List<dynamic>> getCategories(String userID) async {
+  final snapshot = await FirebaseFirestore.instance.collection('users')
+      .doc(userID)
+      .collection('categories')
+      .get();
+
+  List<dynamic> categories = snapshot.docs.map((doc) {
+    Map<String, dynamic> data = doc.data();
+    return data['name'];
+  }).toList();
+
+  return categories;
 }

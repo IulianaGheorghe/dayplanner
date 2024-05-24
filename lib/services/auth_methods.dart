@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dayplanner/services/task_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -40,12 +41,14 @@ class FirebaseAuthMethods {
         }
         final credentials = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
         FirebaseFirestore.instance
-            .collection('users')
-            .doc(credentials.user?.uid)
-            .set({
+          .collection('users')
+          .doc(credentials.user?.uid)
+          .set({
           'name': name,
           'email': email
         });
+
+        addInitialCategories(credentials.user!.uid);
       } catch (e) {
         showSnackBar(context, e.toString());
         throw Exception('Failed to create user: $e');

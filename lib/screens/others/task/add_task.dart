@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -30,8 +31,27 @@ class _AddTaskState extends State<AddTask>{
   bool _destinationSelected = false;
   String _selectedPriority = "Low";
   String _status = "To do";
+  String userID = '';
+  List categoriesList = [];
 
   FirebaseAuthMethods authMethods = FirebaseAuthMethods();
+
+  @override
+  void initState() {
+    super.initState();
+
+    User? user = FirebaseAuth.instance.currentUser;
+    userID = user!.uid;
+
+    _handleCategories();
+  }
+
+  void _handleCategories() async {
+    final categories = await getCategories(userID);
+    setState(() {
+      categoriesList = categories;
+    });
+  }
 
   Future<void> _selectDate() async {
     final DateTime? pickedDate = await showDatePicker(
@@ -169,6 +189,44 @@ class _AddTaskState extends State<AddTask>{
                     onSaved: (value) {
                       _description = value ?? '';
                     },
+                  ),
+                  const SizedBox(height: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      titleStyle('Category', secondaryTitleSize),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField(
+                        dropdownColor: Colors.grey.shade200,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                          fillColor: Colors.white.withOpacity(0.8),
+                          filled: true,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(color: Colors.transparent),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(color: Colors.transparent),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        value: valueChoose,
+                        items: categoriesList.map(
+                                (e) =>
+                                DropdownMenuItem(
+                                  value: e,
+                                  child: Text(e)
+                                )
+                        ).toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            valueChoose = val as String;
+                            _selectedPriority = valueChoose;
+                          });
+                        },
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   Row(
