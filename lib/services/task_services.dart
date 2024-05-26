@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +7,7 @@ class Task {
   String userID;
   String title;
   String description;
+  String category;
   DateTime date;
   TimeOfDay? startTime;
   TimeOfDay? deadline;
@@ -16,7 +16,7 @@ class Task {
   String status;
   DateTime createdAt;
 
-  Task(this.userID, this.title, this.description, this.date, this.startTime, this.deadline, this.priority, this.destination, this.status, this.createdAt);
+  Task(this.userID, this.title, this.description, this.category, this.date, this.startTime, this.deadline, this.priority, this.destination, this.status, this.createdAt);
 
   Future<void> addToFirestore() async {
     final firestore = FirebaseFirestore.instance;
@@ -39,7 +39,7 @@ class Task {
               .catchError((error) => throw Exception("Failed to create document for day in tasks: $error"));
         }
 
-        await firestore.collection("users")
+        DocumentReference newTaskRef = await firestore.collection("users")
             .doc(userID)
             .collection("tasks")
             .doc(formattedDate)
@@ -48,6 +48,7 @@ class Task {
             {
               'title': title,
               'description': description,
+              'category': category,
               'date': Timestamp.fromDate(date),
               'startTime': (startTime == null) ? '' : "${startTime!.hour}:${startTime!.minute}",
               'deadline': (deadline == null) ? '' : "${deadline!.hour}:${deadline!.minute}",
@@ -57,11 +58,39 @@ class Task {
               'createdAt': createdAt.toUtc(),
             }
           );
+        String categoryId = await getCategoryId(userID, category);
+        await firestore.collection("users")
+            .doc(userID)
+            .collection("categories")
+            .doc(categoryId)
+            .collection("tasks")
+            .add(
+              {
+                'taskRef': newTaskRef
+              }
+            );
       }
     } catch (e) {
       throw Exception('Task cannot be added to firebase.');
     }
   }
+}
+
+Future<String> getCategoryId(String userID, String category) async {
+  String id = '';
+
+  final snapshot = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(userID)
+      .collection('categories')
+      .where('name', isEqualTo: category)
+      .get();
+
+  for (var doc in snapshot.docs) {
+    id = doc.id;
+  }
+
+  return id;
 }
 
 Future<List<Task>> getTasksForDay(DateTime day, String userID) async {
@@ -81,6 +110,7 @@ Future<List<Task>> getTasksForDay(DateTime day, String userID) async {
         userID,
         data['title'],
         data['description'],
+        data['category'],
         doc['date'].toDate(),
         (doc['startTime'] != '') ?
           TimeOfDay(hour: int.parse(doc['startTime'].split(':')[0]),
@@ -139,7 +169,7 @@ Future<void> updateStatus(String userID, String task, String formattedDate, Stri
       .update({'status': status});
 }
 
-Future<List<Map<String, dynamic>>> getTasksDetails(String userID) async {
+Future<List<Map<String, dynamic>>> getAllTasksForToday(String userID) async {
   final todayDate = DateTime.now();
   String formattedDate = DateFormat('dd-MM-yyyy').format(todayDate);
   List<Map<String, dynamic>> tasksData = [];
@@ -158,6 +188,55 @@ Future<List<Map<String, dynamic>>> getTasksDetails(String userID) async {
         'id': doc.id,
         'title': doc['title'],
         'description': doc['description'],
+        'category': doc['category'],
+        'date': doc['date'].toDate(),
+        'startTime': (doc['startTime'] != '')
+            ? TimeOfDay(
+          hour: int.parse(doc['startTime'].split(':')[0]),
+          minute: int.parse(doc['startTime'].split(':')[1]),
+        )
+            : null,
+        'deadline': (doc['deadline'] != '')
+            ? TimeOfDay(
+          hour: int.parse(doc['deadline'].split(':')[0]),
+          minute: int.parse(doc['deadline'].split(':')[1]),
+        )
+            : null,
+        'priority': doc['priority'],
+        'destination': (doc['destination'] != '')
+            ? LatLng(
+          double.parse(doc['destination'].split(',')[0]),
+          double.parse(doc['destination'].split(',')[1]),
+        )
+            : null,
+        'status': doc['status'],
+      };
+    }).toList();
+  }
+  return tasksData;
+}
+
+Future<List<Map<String, dynamic>>> getTasksByCategoryForToday(String userID, String category) async {
+  final todayDate = DateTime.now();
+  String formattedDate = DateFormat('dd-MM-yyyy').format(todayDate);
+  List<Map<String, dynamic>> tasksData = [];
+
+  final snapshot = await FirebaseFirestore.instance
+      .collection("users")
+      .doc(userID)
+      .collection("tasks")
+      .doc(formattedDate)
+      .collection("day tasks")
+      .where('category', isEqualTo: category)
+      .get();
+
+  if (snapshot.docs.isNotEmpty) {
+    tasksData = snapshot.docs.map((doc) {
+      return {
+        'id': doc.id,
+        'title': doc['title'],
+        'description': doc['description'],
+        'category': doc['category'],
         'date': doc['date'].toDate(),
         'startTime': (doc['startTime'] != '')
             ? TimeOfDay(
@@ -195,6 +274,7 @@ Future<void> addCategory(String name, String userID) async {
 }
 
 Future<void> addInitialCategories(String userID) async {
+  await addCategory('No category', userID);
   await addCategory('Work', userID);
   await addCategory('Study', userID);
   await addCategory('Birthdays', userID);
@@ -210,6 +290,7 @@ Future<List<dynamic>> getCategories(String userID) async {
   final snapshot = await FirebaseFirestore.instance.collection('users')
       .doc(userID)
       .collection('categories')
+      .orderBy('name')
       .get();
 
   List<dynamic> categories = snapshot.docs.map((doc) {

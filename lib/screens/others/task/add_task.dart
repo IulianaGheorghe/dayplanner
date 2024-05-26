@@ -10,9 +10,6 @@ import '../../../services/task_services.dart';
 import '../../../util/components.dart';
 import '../../../util/constants.dart';
 
-String valueChoose = "Low";
-List priorityList = ["Low", "Medium", "High"];
-
 class AddTask extends StatefulWidget{
   const AddTask({super.key});
 
@@ -30,6 +27,7 @@ class _AddTaskState extends State<AddTask>{
   LatLng? _selectedDestination;
   bool _destinationSelected = false;
   String _selectedPriority = "Low";
+  String _selectedCategory = "No category";
   String _status = "To do";
   String userID = '';
   List categoriesList = [];
@@ -102,6 +100,7 @@ class _AddTaskState extends State<AddTask>{
         userID,
         _title,
         _description,
+        _selectedCategory,
         _selectedDate,
         _selectedStartTime,
         _selectedDeadline,
@@ -125,6 +124,10 @@ class _AddTaskState extends State<AddTask>{
       }
     }
   }
+
+  String choosePriority = "Low";
+  List priorityList = ["Low", "Medium", "High"];
+  String chooseCategory = "No category";
 
   @override
   Widget build(BuildContext context) {
@@ -211,18 +214,24 @@ class _AddTaskState extends State<AddTask>{
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        value: valueChoose,
+                        value: chooseCategory,
                         items: categoriesList.map(
-                                (e) =>
+                                (category) =>
                                 DropdownMenuItem(
-                                  value: e,
-                                  child: Text(e)
+                                  value: category,
+                                  child: Text(
+                                        category,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: chooseCategory == category ? primaryColor : Colors.black,
+                                        ),
+                                      ),
                                 )
                         ).toList(),
                         onChanged: (val) {
                           setState(() {
-                            valueChoose = val as String;
-                            _selectedPriority = valueChoose;
+                            chooseCategory = val as String;
+                            _selectedCategory = chooseCategory;
                           });
                         },
                       ),
@@ -253,7 +262,9 @@ class _AddTaskState extends State<AddTask>{
                                   children: [
                                     const Icon(CupertinoIcons.calendar),
                                     const SizedBox(width: 16),
-                                    Text(formatDate(_selectedDate)),
+                                    Text(formatDate(_selectedDate),
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -283,7 +294,9 @@ class _AddTaskState extends State<AddTask>{
                                   children: [
                                     const Icon(CupertinoIcons.clock),
                                     const SizedBox(width: 16),
-                                    Text(_selectedStartTime != null ? formatTime(_selectedStartTime!) : 'hh : mm'),
+                                    Text(_selectedStartTime != null ? formatTime(_selectedStartTime!) : 'hh : mm',
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -318,7 +331,7 @@ class _AddTaskState extends State<AddTask>{
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              value: valueChoose,
+                              value: choosePriority,
                               items: priorityList.map(
                                       (e) =>
                                       DropdownMenuItem(
@@ -331,15 +344,17 @@ class _AddTaskState extends State<AddTask>{
                                               color: getColorForPriority(e),
                                               margin: const EdgeInsets.only(right: 8),
                                             ),
-                                            Text(e),
+                                            Text(e,
+                                              style: const TextStyle(fontWeight: FontWeight.bold),
+                                            ),
                                           ],
                                         ),
                                       )
                               ).toList(),
                               onChanged: (val) {
                                 setState(() {
-                                  valueChoose = val as String;
-                                  _selectedPriority = valueChoose;
+                                  choosePriority = val as String;
+                                  _selectedPriority = choosePriority;
                                 });
                               },
                             ),
@@ -368,7 +383,9 @@ class _AddTaskState extends State<AddTask>{
                                   children: [
                                     const Icon(CupertinoIcons.clock),
                                     const SizedBox(width: 16),
-                                    Text(_selectedDeadline != null ? formatTime(_selectedDeadline!) : 'hh : mm'),
+                                    Text(_selectedDeadline != null ? formatTime(_selectedDeadline!) : 'hh : mm',
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
                                   ],
                                 ),
                               ),

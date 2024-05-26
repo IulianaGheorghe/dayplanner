@@ -9,7 +9,8 @@ import '../../../util/components.dart';
 import '../../../util/constants.dart';
 
 class TasksList extends StatefulWidget {
-  const TasksList({super.key});
+  final String category;
+  const TasksList({super.key, required this.category});
 
   @override
   State<TasksList> createState() => _TasksListState();
@@ -18,6 +19,14 @@ class TasksList extends StatefulWidget {
 class _TasksListState extends State<TasksList> {
   String? userID = '';
   List<Map<String, dynamic>> tasksData = [];
+
+  @override
+  void didUpdateWidget(covariant TasksList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.category != widget.category) {
+      handleTasksData();
+    }
+  }
 
   @override
   void initState() {
@@ -30,7 +39,10 @@ class _TasksListState extends State<TasksList> {
   }
 
   void handleTasksData() async {
-    final tasks = await getTasksDetails(userID!);
+    List<Map<String, dynamic>> tasks;
+    widget.category == "All"
+      ? tasks = await getAllTasksForToday(userID!)
+      : tasks = await getTasksByCategoryForToday(userID!, widget.category);
     setState(() {
       tasksData = tasks;
     });
