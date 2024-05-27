@@ -11,6 +11,7 @@ const questionTextColor = Color(0xff7c6b81);
 const inputDecorationColor = primaryColor;
 const newTaskColor = Color(0xff52BF96);
 const green = Color(0xff18ee25);
+const profilePageColor = Color(0xff289EC6);
 
 // 0xff7c6b81
 // 0xffb603cc

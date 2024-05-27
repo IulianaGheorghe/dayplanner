@@ -51,7 +51,8 @@ class FirebaseAuthMethods {
           .set({
             'name': name,
             'email': email,
-            'id': randomUserId
+            'id': randomUserId,
+            'photo': ''
           });
 
         addInitialCategories(credentials.user!.uid);
@@ -106,6 +107,68 @@ class FirebaseAuthMethods {
     userID = user!.uid;
 
     return userID;
+  }
+
+  Future<String> getName(String email) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User does not exist!');
+    }
+    DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+
+    String name;
+    if (userSnapshot.exists) {
+      name = userSnapshot.get('name');
+    } else {
+      throw Exception('User does not exist');
+    }
+    return name;
+  }
+
+  Future<String> getPhoto(String email) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User does not exist!');
+    }
+    DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+
+    String photo;
+    if (userSnapshot.exists) {
+      photo = userSnapshot.get('photo');
+    } else {
+      throw Exception('User does not exist');
+    }
+    return photo;
+  }
+
+  Future<void> updatePhotoURL(String userId, String newPhotoURL) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DocumentReference docRef = firestore.collection('users').doc(userId);
+    try {
+      await docRef.update({
+        'photo': newPhotoURL,
+      });
+    } catch (error) {
+      Exception('Error updating photo URL: $error');
+    }
+  }
+
+  Future<void> updateUsername(String userId, String newUsername) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DocumentReference docRef = firestore.collection('users').doc(userId);
+    try {
+      await docRef.update({
+        'name': newUsername,
+      });
+    } catch (e) {
+      Exception('Error updating username: $e');
+    }
   }
 }
 
