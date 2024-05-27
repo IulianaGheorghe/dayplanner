@@ -104,25 +104,23 @@ class _HomeState extends State<Home>{
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
                   Align(
-                    alignment: Alignment.centerLeft,
+                    alignment: Alignment.centerRight,
                     child: SizedBox(
-                      width: MediaQuery.of(context).size.width / 2,
+                      width: MediaQuery.of(context).size.width / 2.9,
                       child: DropdownButtonFormField(
                         isExpanded: true,
                         dropdownColor: Colors.white.withOpacity(0.9),
                         decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.only(right: 50, left: 15),
-                          fillColor: Colors.white.withOpacity(0.1),
+                          fillColor: Colors.white.withOpacity(0.5),
                           filled: true,
                           enabledBorder: OutlineInputBorder(
                             borderSide: const BorderSide(color: Colors.transparent),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(30),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderSide: const BorderSide(color: Colors.transparent),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(30),
                           ),
                         ),
                         value: chooseCategory,
