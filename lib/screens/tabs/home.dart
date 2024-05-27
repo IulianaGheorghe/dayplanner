@@ -61,6 +61,7 @@ class _HomeState extends State<Home>{
                       Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
+                          const SizedBox(height: 20,),
                           const Text(
                             'Today\'s Plan',
                             style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold, fontFamily: font1),
@@ -70,82 +71,94 @@ class _HomeState extends State<Home>{
                             formattedDate,
                             style: const TextStyle(fontSize: 20, fontFamily: font2),
                           ),
-
                         ],
                       ),
                       const Spacer(),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(context,
-                              MaterialPageRoute(builder: (context) => const AddTask()));
-                        },
-                        style: ElevatedButton.styleFrom(
-                            shape: const StadiumBorder(),
-                            fixedSize: const Size(141.0, 55.0),
-                            textStyle: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width / 2.9,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(context,
+                                    MaterialPageRoute(builder: (context) => const AddTask()));
+                              },
+                              style: ElevatedButton.styleFrom(
+                                  shape: const StadiumBorder(),
+                                  fixedSize: const Size(141.0, 55.0),
+                                  textStyle: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold
+                                  ),
+                                  side: const BorderSide(color: buttonBorderColor, width: 1),
+                                  backgroundColor: primaryColor,
+                                  foregroundColor: buttonTextColor,
+                                  elevation: 10
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(
+                                    Icons.add_circle,
+                                    color: Colors.black,
+                                    size: 30.0,
+                                  ),
+                                  Text(' New Task'),
+                                ],
+                              ),
                             ),
-                            side: const BorderSide(color: buttonBorderColor, width: 1),
-                            backgroundColor: primaryColor,
-                            foregroundColor: buttonTextColor,
-                            elevation: 10
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.add_circle,
-                              color: Colors.black,
-                              size: 30.0,
+                          ),
+                          const SizedBox(height: 15),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width / 2.8,
+                              child: DropdownButtonFormField(
+                                isExpanded: true,
+                                dropdownColor: Colors.white.withOpacity(0.9),
+                                decoration: InputDecoration(
+                                  fillColor: Colors.white.withOpacity(0.5),
+                                  filled: true,
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(color: Colors.transparent),
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(color: Colors.transparent),
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                ),
+                                value: chooseCategory,
+                                items: _categoriesList.map(
+                                        (category) =>
+                                        DropdownMenuItem(
+                                          value: category,
+                                          child: Padding(
+                                            padding: chooseCategory.length <= 8
+                                                ? const EdgeInsetsDirectional.fromSTEB(10, 0, 10, 0)
+                                                : const EdgeInsetsDirectional.all(0),
+                                            child: Text(
+                                              category,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: chooseCategory == category ? primaryColor : Colors.black,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                ).toList(),
+                                onChanged: (val) {
+                                  setState(() {
+                                    chooseCategory = val as String;
+                                    _selectedCategory = chooseCategory;
+                                  });
+                                },
+                              ),
                             ),
-                            Text(' New Task'),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: SizedBox(
-                      width: MediaQuery.of(context).size.width / 2.9,
-                      child: DropdownButtonFormField(
-                        isExpanded: true,
-                        dropdownColor: Colors.white.withOpacity(0.9),
-                        decoration: InputDecoration(
-                          fillColor: Colors.white.withOpacity(0.5),
-                          filled: true,
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(color: Colors.transparent),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(color: Colors.transparent),
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        value: chooseCategory,
-                        items: _categoriesList.map(
-                                (category) =>
-                                DropdownMenuItem(
-                                  value: category,
-                                  child: Text(
-                                    category,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: chooseCategory == category ? primaryColor : Colors.black,
-                                    ),
-                                  ),
-                                )
-                        ).toList(),
-                        onChanged: (val) {
-                          setState(() {
-                            chooseCategory = val as String;
-                            _selectedCategory = chooseCategory;
-                          });
-                        },
-                      ),
-                    ),
                   ),
                   Expanded(
                     child: TasksList(category: _selectedCategory),
