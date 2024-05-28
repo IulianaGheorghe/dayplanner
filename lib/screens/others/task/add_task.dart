@@ -7,6 +7,7 @@ import '../../../common_widgets/navigationBar.dart';
 import '../../../common_widgets/showSnackBar.dart';
 import '../../../services/auth_methods.dart';
 import '../../../services/task_services.dart';
+import '../../../services/user_services.dart';
 import '../../../util/components.dart';
 import '../../../util/constants.dart';
 
@@ -33,6 +34,7 @@ class _AddTaskState extends State<AddTask>{
   List categoriesList = [];
 
   FirebaseAuthMethods authMethods = FirebaseAuthMethods();
+  UserServices userServices = UserServices();
 
   @override
   void initState() {
@@ -95,7 +97,7 @@ class _AddTaskState extends State<AddTask>{
   void _submitForm() async {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      String userID = await authMethods.getUserId();
+      String userID = await userServices.getUserId();
       final taskAdd = Task(
         userID,
         _title,

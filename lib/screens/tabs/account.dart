@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dayplanner/services/user_services.dart';
 import 'package:flutter/material.dart';
 import '../../services/auth_methods.dart';
 import '../../util/constants.dart';
-import '../others/profile/edit_profile.dart';
+import '../others/account/edit_profile.dart';
 
 class Account extends StatefulWidget{
   const Account({super.key});
@@ -24,31 +24,22 @@ class _AccountState extends State<Account>{
   late Future<Map<String, String>> fetchDetails;
 
   FirebaseAuthMethods authMethods = FirebaseAuthMethods();
+  UserServices userServices = UserServices();
 
   @override
   void initState() {
     super.initState();
-    fetchDetails = _getUserDetails();
+    _getUserDetails();
   }
 
-  Future<Map<String, String>> _getUserDetails() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    String? email = user?.email;
-    if (email != null) {
-      String name = await authMethods.getName(email) ;
-      String photo = await authMethods.getPhoto(email);
-      setState(() {
-        userName = name;
-        userEmail = email;
-        userPhoto = photo;
-      });
-      return {
-        'userName': name,
-        'userEmail': email,
-        'userPhoto': photo,
-      };
-    }
-    return {};
+  void _getUserDetails() async {
+    fetchDetails = userServices.getUserDetails();
+    Map<String, String> userDetails = await userServices.getUserDetails();
+    setState(() {
+      userName = userDetails['userName']!;
+      userEmail = userDetails['userEmail']!;
+      userPhoto = userDetails['userPhoto']!;
+    });
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../common_widgets/navigationBar.dart';
 import '../../../common_widgets/showSnackBar.dart';
 import '../../../services/auth_methods.dart';
+import '../../../services/user_services.dart';
 import '../../../util/constants.dart';
 
 
@@ -25,35 +27,36 @@ class _EditProfileState extends State<EditProfile>{
   String userPhoto = "";
   bool showPassword = true;
   File? _imageFile;
+  String? oldProfileImageUrl;
 
   late Future<Map<String, String>> fetchDetails;
 
   FirebaseAuthMethods authMethods = FirebaseAuthMethods();
+  UserServices userServices = UserServices();
 
   @override
   void initState() {
     super.initState();
-    fetchDetails = _getUserDetails();
+    _getUserDetails();
+    _loadProfileImage();
   }
 
-  Future<Map<String, String>> _getUserDetails() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    String? email = user?.email;
-    if (email != null) {
-      String name = await authMethods.getName(email) ;
-      String photo = await authMethods.getPhoto(email);
-      setState(() {
-        userName = name;
-        userEmail = email;
-        userPhoto = photo;
-      });
-      return {
-        'userName': name,
-        'userEmail': email,
-        'userPhoto': photo,
-      };
-    }
-    return {};
+  Future<void> _loadProfileImage() async {
+    String userID = await userServices.getUserId();
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userID).get();
+    setState(() {
+      oldProfileImageUrl = userDoc['photo'];
+    });
+  }
+
+  void _getUserDetails() async {
+    fetchDetails = userServices.getUserDetails();
+    Map<String, String> userDetails = await userServices.getUserDetails();
+    setState(() {
+      userName = userDetails['userName']!;
+      userEmail = userDetails['userEmail']!;
+      userPhoto = userDetails['userPhoto']!;
+    });
   }
 
   Future<void> _pickImage() async {
@@ -70,9 +73,13 @@ class _EditProfileState extends State<EditProfile>{
     }
   }
 
-  Future _uploadImage() async {
+  Future<void> _uploadImage() async {
     try {
-      String userID = await authMethods.getUserId();
+      if (oldProfileImageUrl!.isNotEmpty) {
+        await FirebaseStorage.instance.refFromURL(oldProfileImageUrl!).delete();
+      }
+
+      String userID = await userServices.getUserId();
       final profilePicID = DateTime.now().millisecondsSinceEpoch.toString();
       final storageReference = FirebaseStorage.instance.ref().child('$userID/profile').child("post_$profilePicID");
       await storageReference.putFile(_imageFile!);
@@ -91,26 +98,21 @@ class _EditProfileState extends State<EditProfile>{
     setState(() {
       _isLoading = true;
     });
-
-    User? user = FirebaseAuth.instance.currentUser;
-
-    String userID = await authMethods.getUserId();
     if( _imageFile != null) {
       await _uploadImage();
     }
+    User? user = FirebaseAuth.instance.currentUser;
+    String userID = await userServices.getUserId();
     try {
-      if( _imageFile != null ) {
-        await authMethods.updatePhotoURL(userID, userPhoto);
+      if (_imageFile != null ) {
+        await userServices.updatePhotoURL(userID, userPhoto);
       }
-
-      if( userPassword != "") {
+      if (userPassword != "") {
         user?.updatePassword(userPassword);
       }
-
-      if( userName != '') {
-        await authMethods.updateUsername(userID, userName);
+      if (userName != '') {
+        await userServices.updateUsername(userID, userName);
       }
-
       Navigator.pop(context);
       Navigator.pushReplacement(
         context,
