@@ -1,15 +1,10 @@
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-
-import '../../common_widgets/showSnackBar.dart';
 import '../../services/auth_methods.dart';
 import '../../util/constants.dart';
 import '../others/profile/edit_profile.dart';
-import 'home.dart';
 
 class Account extends StatefulWidget{
   const Account({super.key});
@@ -56,65 +51,6 @@ class _AccountState extends State<Account>{
     return {};
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
-    }
-    else
-    {
-      showSnackBar(context, 'Image not added!');
-    }
-  }
-
-  Future _uploadImage() async {
-    try {
-      String userID = await authMethods.getUserId();
-      final postID = DateTime.now().millisecondsSinceEpoch.toString();
-      final storageReference = FirebaseStorage.instance.ref().child('$userID/profile').child("post_$postID");
-      await storageReference.putFile(_imageFile!);
-      final downloadUrl = await storageReference.getDownloadURL();
-      setState(() {
-        userPhoto = downloadUrl;
-      });
-    } catch (e) {
-      throw Exception('Error uploading image: $e');
-    }
-  }
-
-  void saveChanges() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    String userID = await authMethods.getUserId();
-    if( _imageFile != null) {
-      await _uploadImage();
-    }
-    try {
-      if( _imageFile != null ) {
-        await authMethods.updatePhotoURL(userID, userPhoto);
-      }
-
-      if( userPassword != "") {
-        user?.updatePassword(userPassword);
-      }
-
-      if( userName != '') {
-        await authMethods.updateUsername(userID, userName);
-      }
-      Navigator.pop(context);
-      Navigator.pushReplacement<void, void>(
-        context,
-        MaterialPageRoute<void>(
-          builder: (BuildContext context) => const Home(),
-        ),
-      );
-    } catch (e) {
-      throw Exception('Error updating account details: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -130,8 +66,10 @@ class _AccountState extends State<Account>{
             PopupMenuButton<String>(
               onSelected: (value) {
                 if (value == 'Edit profile') {
-                  Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => const EditProfile()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const EditProfile()),
+                  );
                 }
               },
               itemBuilder: (BuildContext context) {
@@ -201,7 +139,6 @@ class _AccountState extends State<Account>{
             child: Stack(
               children: [
                 InkWell(
-                  onLongPress: () {  _pickImage(); },
                   child: userPhoto == ""
                       ? Container(
                     width: 150,

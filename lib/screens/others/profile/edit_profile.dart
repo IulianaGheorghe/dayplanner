@@ -5,10 +5,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../common_widgets/navigationBar.dart';
 import '../../../common_widgets/showSnackBar.dart';
 import '../../../services/auth_methods.dart';
 import '../../../util/constants.dart';
-import '../../tabs/home.dart';
 
 
 class EditProfile extends StatefulWidget{
@@ -73,8 +73,8 @@ class _EditProfileState extends State<EditProfile>{
   Future _uploadImage() async {
     try {
       String userID = await authMethods.getUserId();
-      final postID = DateTime.now().millisecondsSinceEpoch.toString();
-      final storageReference = FirebaseStorage.instance.ref().child('$userID/profile').child("post_$postID");
+      final profilePicID = DateTime.now().millisecondsSinceEpoch.toString();
+      final storageReference = FirebaseStorage.instance.ref().child('$userID/profile').child("post_$profilePicID");
       await storageReference.putFile(_imageFile!);
       final downloadUrl = await storageReference.getDownloadURL();
       setState(() {
@@ -85,8 +85,15 @@ class _EditProfileState extends State<EditProfile>{
     }
   }
 
+  bool _isLoading = false;
+
   void saveChanges() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     User? user = FirebaseAuth.instance.currentUser;
+
     String userID = await authMethods.getUserId();
     if( _imageFile != null) {
       await _uploadImage();
@@ -103,15 +110,18 @@ class _EditProfileState extends State<EditProfile>{
       if( userName != '') {
         await authMethods.updateUsername(userID, userName);
       }
+
       Navigator.pop(context);
-      Navigator.pushReplacement<void, void>(
+      Navigator.pushReplacement(
         context,
-        MaterialPageRoute<void>(
-          builder: (BuildContext context) => const Home(),
-        ),
+        MaterialPageRoute(builder: (context) => const MyBottomNavigationBar(index: 2)),
       );
     } catch (e) {
       throw Exception('Error updating account details: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -196,7 +206,6 @@ class _EditProfileState extends State<EditProfile>{
             child: Stack(
               children: [
                 InkWell(
-                  onLongPress: () {  _pickImage(); },
                   child: userPhoto == ""
                       ? Container(
                     width: 150,
@@ -237,6 +246,20 @@ class _EditProfileState extends State<EditProfile>{
                             image: imageShowed)),
                   ),
                 ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.blue,
+                    child: IconButton(
+                      icon: const Icon(Icons.camera_alt, color: Colors.white),
+                      onPressed: () {
+                        _pickImage();
+                      },
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -267,7 +290,7 @@ class _EditProfileState extends State<EditProfile>{
             ),
             onChanged: (value) {
               setState(() {
-                userName = value ?? '';
+                userName = value;
               });
             },
           ),
@@ -311,22 +334,28 @@ class _EditProfileState extends State<EditProfile>{
               SizedBox(
                 width: MediaQuery.of(context).size.width / 2.5,
                 height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor
-                  ),
-                  onPressed: () {
-                    saveChanges();
-                  },
-                  child: const Text(
-                    'Save changes',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontFamily: font1
+                child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor:AlwaysStoppedAnimation<Color>(profilePageColor),
+                      ),
+                    )
+                  : ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor
+                      ),
+                      onPressed: () {
+                        saveChanges();
+                      },
+                      child: const Text(
+                        'Save changes',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontFamily: font1
+                        ),
+                      ),
                     ),
-                  ),
-                ),
               ),
             ],
           )
