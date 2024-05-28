@@ -116,7 +116,7 @@ class _AddTaskState extends State<AddTask>{
         Navigator.pushReplacement<void, void>(
           context,
           MaterialPageRoute<void>(
-            builder: (BuildContext context) => const MyBottomNavigationBar(),
+            builder: (BuildContext context) => const MyBottomNavigationBar(index: 0),
           ),
         );
       } catch (e) {

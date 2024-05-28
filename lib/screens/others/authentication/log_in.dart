@@ -99,7 +99,7 @@ class _LogInState extends State<LogIn>{
                         try {
                           await _handleLogIn();
                           Navigator.push(context,
-                                MaterialPageRoute(builder: (context) => MyBottomNavigationBar()));
+                                MaterialPageRoute(builder: (context) => const MyBottomNavigationBar(index: 0)));
                         } catch (e) {
                           throw Exception('Error logging the user: $e');
                         }

@@ -6,14 +6,23 @@ import '../screens/tabs/calendar.dart';
 import '../screens/tabs/home.dart';
 
 class MyBottomNavigationBar extends StatefulWidget {
-  const MyBottomNavigationBar({super.key});
+  final int index;
+
+  const MyBottomNavigationBar({super.key, required this.index});
 
   @override
   State<MyBottomNavigationBar> createState() => _MyBottomNavigationBarState();
 }
 
 class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
-  int index = 0;
+  late int index;
+
+  @override
+  void initState() {
+    super.initState();
+    index = widget.index;
+  }
+
   final screens = [
     const Home(),
     const Calendar(),
@@ -41,8 +50,8 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
         ],
         currentIndex: index,
         selectedItemColor: primaryColor,
-        onTap: (index) =>
-            setState(() => this.index = index),
+        onTap: (selectedIndex) =>
+            setState(() => index = selectedIndex),
       ),
     );
   }
