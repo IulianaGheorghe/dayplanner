@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:dayplanner/services/task_services.dart';
 import 'package:dayplanner/services/user_services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../common_widgets/indicator.dart';
 import '../../services/auth_methods.dart';
@@ -22,6 +24,8 @@ class _AccountState extends State<Account>{
   String userPhoto = "";
   bool showPassword = true;
   File? _imageFile;
+  List categories = [];
+  int totalTasksCount = 0;
 
   late Future<Map<String, String>> fetchDetails;
 
@@ -32,6 +36,7 @@ class _AccountState extends State<Account>{
   void initState() {
     super.initState();
     _getUserDetails();
+    _getCategoriesPercentages();
   }
 
   void _getUserDetails() async {
@@ -42,6 +47,17 @@ class _AccountState extends State<Account>{
       userEmail = userDetails['userEmail']!;
       userPhoto = userDetails['userPhoto']!;
     });
+  }
+
+  void _getCategoriesPercentages() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User does not exist!');
+    }
+    String userID = user.uid;
+
+    categories = await getCategoryTaskPercentage(userID);
+    totalTasksCount = await getTotalTasksCount(userID);
   }
 
   @override
@@ -212,146 +228,99 @@ class _AccountState extends State<Account>{
   int touchedIndex = -1;
   Widget buildPieChart() {
     return Container(
-      width: MediaQuery.of(context).size.width - 20,
+      width: MediaQuery.of(context).size.width - 30,
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.8),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: SizedBox(
-              height: 200,
-              child: PieChart(
-                PieChartData(
-                  pieTouchData: PieTouchData(
-                    touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                      setState(() {
-                        if (!event.isInterestedForInteractions ||
-                            pieTouchResponse == null ||
-                            pieTouchResponse.touchedSection == null) {
-                          touchedIndex = -1;
-                          return;
-                        }
-                        touchedIndex = pieTouchResponse
-                            .touchedSection!.touchedSectionIndex;
-                      });
-                    },
-                  ),
-                  borderData: FlBorderData(
-                    show: false,
-                  ),
-                  sectionsSpace: 0,
-                  centerSpaceRadius: 30,
-                  sections: List.generate(4, (i) {
-                    final isTouched = i == touchedIndex;
-                    final fontSize = isTouched ? 25.0 : 16.0;
-                    final radius = isTouched ? 60.0 : 50.0;
-                    const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
-                    switch (i) {
-                      case 0:
-                        return PieChartSectionData(
-                          color: Colors.lightBlue,
-                          value: 40,
-                          title: '40%',
-                          radius: radius,
-                          titleStyle: TextStyle(
-                            fontSize: fontSize,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                            shadows: shadows,
-                          ),
-                        );
-                      case 1:
-                        return PieChartSectionData(
-                          color: Colors.yellow,
-                          value: 30,
-                          title: '30%',
-                          radius: radius,
-                          titleStyle: TextStyle(
-                            fontSize: fontSize,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                            shadows: shadows,
-                          ),
-                        );
-                      case 2:
-                        return PieChartSectionData(
-                          color: Colors.purple,
-                          value: 15,
-                          title: '15%',
-                          radius: radius,
-                          titleStyle: TextStyle(
-                            fontSize: fontSize,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                            shadows: shadows,
-                          ),
-                        );
-                      case 3:
-                        return PieChartSectionData(
-                          color: Colors.greenAccent,
-                          value: 15,
-                          title: '15%',
-                          radius: radius,
-                          titleStyle: TextStyle(
-                            fontSize: fontSize,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                            shadows: shadows,
-                          ),
-                        );
-                      default:
-                        throw Error();
-                    }
-                  }),
-                ),
+          const Padding(
+            padding: EdgeInsets.only(left: 30, right: 30, top: 10),
+            child: Text(
+              'Distribuția procentuală a sarcinilor pe categorii',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: font1,
+                fontSize: 17,
               ),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.all(35.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Indicator(
-                  color: Colors.lightBlue,
-                  text: 'First',
-                  isSquare: true,
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 200,
+                  child: PieChart(
+                    PieChartData(
+                      pieTouchData: PieTouchData(
+                        touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                          setState(() {
+                            if (!event.isInterestedForInteractions ||
+                                pieTouchResponse == null ||
+                                pieTouchResponse.touchedSection == null) {
+                              touchedIndex = -1;
+                              return;
+                            }
+                            touchedIndex = pieTouchResponse
+                                .touchedSection!.touchedSectionIndex;
+                          });
+                        },
+                      ),
+                      borderData: FlBorderData(
+                        show: false,
+                      ),
+                      sectionsSpace: 0,
+                      centerSpaceRadius: 30,
+                      sections: categories.map((category) {
+                        final index = category['index'];
+                        final isTouched = index == touchedIndex;
+                        final fontSize = isTouched ? 25.0 : 16.0;
+                        final radius = isTouched ? 60.0 : 50.0;
+                        const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
+                        return PieChartSectionData(
+                          color: category['color'],
+                          value: category['percentage'],
+                          title: '${category['percentage'].round()}%',
+                          radius: radius,
+                          titleStyle: TextStyle(
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                            shadows: shadows,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 ),
-                SizedBox(
-                  height: 4,
-                ),
-                Indicator(
-                  color: Colors.yellow,
-                  text: 'Second',
-                  isSquare: true,
-                ),
-                SizedBox(
-                  height: 4,
-                ),
-                Indicator(
-                  color: Colors.purple,
-                  text: 'Third',
-                  isSquare: true,
-                ),
-                SizedBox(
-                  height: 4,
-                ),
-                Indicator(
-                  color: Colors.greenAccent,
-                  text: 'Fourth',
-                  isSquare: true,
-                ),
-                SizedBox(
-                  height: 18,
-                ),
-              ],
-            ),
+              ),
+              Padding(
+                  padding: const EdgeInsets.all(40.0),
+                  child: SizedBox(
+                    height: 200,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: categories.map((category) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Indicator(
+                              color: category['color'],
+                              text: category['name'],
+                              isSquare: true,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  )
+              ),
+            ],
           ),
         ],
-      ),
+      )
     );
   }
 }

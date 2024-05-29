@@ -62,7 +62,7 @@ class _TasksListState extends State<TasksList> {
         return Column(
             children: [
               Dismissible(
-                key: Key(task['id']),
+                key: UniqueKey(),
                 direction: DismissDirection.endToStart,
                 background: Container(
                   color: Colors.red,
@@ -78,14 +78,7 @@ class _TasksListState extends State<TasksList> {
                   ),
                 ),
                 onDismissed: (direction) async {
-                  await FirebaseFirestore.instance
-                      .collection("users")
-                      .doc(userID)
-                      .collection("tasks")
-                      .doc(formattedDate)
-                      .collection("day tasks")
-                      .doc(task['id'])
-                      .delete();
+                  await deleteTask(userID!, task['id'], formattedDate, task['category']);
                   setState(() {});
                 },
                 child: GestureDetector(
