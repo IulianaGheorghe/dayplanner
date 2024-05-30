@@ -88,7 +88,8 @@ class Task {
   }
 }
 
-Future<void> deleteTask(String userID, String taskID, String formattedDate, String categoryID) async{
+Future<void> deleteTask(String userID, String taskID, String formattedDate, String categoryName) async{
+  String categoryID = await getCategoryId(userID, categoryName);
   Future<void> updateTaskCountFromTasks() async {
     DocumentReference docRef = _firestore.collection("users").doc(userID).collection("tasks").doc(formattedDate);
     DocumentSnapshot dateSnapshot = await docRef.get();
@@ -105,11 +106,13 @@ Future<void> deleteTask(String userID, String taskID, String formattedDate, Stri
   }
   Future<void> deleteTaskReferenceFromCategories() async {
     DocumentReference docRef = _firestore.collection("users").doc(userID).collection("categories").doc(categoryID);
+    String taskRef = 'users/$userID/tasks/$formattedDate/day tasks/$taskID';
     final taskSnapshot = await docRef
         .collection('tasks')
-        .where('taskRef', isEqualTo: '/users/$userID/tasks/$formattedDate/day tasks/$taskID')
+        .where('taskRef', isEqualTo: _firestore.doc(taskRef))
         .limit(1)
         .get();
+
     String taskIdFromCategory = taskSnapshot.docs.first.id;
     await docRef.collection('tasks')
         .doc(taskIdFromCategory)

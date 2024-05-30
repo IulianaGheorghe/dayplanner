@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dayplanner/screens/others/task/task_details.dart';
 import 'package:dayplanner/services/task_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -79,7 +78,7 @@ class _TasksListState extends State<TasksList> {
                 ),
                 onDismissed: (direction) async {
                   await deleteTask(userID!, task['id'], formattedDate, task['category']);
-                  setState(() {});
+                  setState(() {tasksData.removeAt(index);});
                 },
                 child: GestureDetector(
                   onTap: () {
