@@ -4,6 +4,8 @@ import 'package:dayplanner/services/task_services.dart';
 import 'package:dayplanner/services/user_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 import '../../common_widgets/indicator.dart';
 import '../../services/auth_methods.dart';
 import '../../util/constants.dart';
@@ -18,14 +20,17 @@ class Account extends StatefulWidget{
 }
 
 class _AccountState extends State<Account>{
+  String userID = '';
   String userName = "";
   String userEmail = "";
-  String userPassword = "";
   String userPhoto = "";
-  bool showPassword = true;
   File? _imageFile;
-  List categories = [];
-  int totalTasksCount = 0;
+  List _categories = [];
+  int _totalTasksCount = 0;
+  late TooltipBehavior _tooltipBehavior;
+  String _startOfWeek = '';
+  String _endOfWeek = '';
+  List _noOfTodoAndDoneTasksForWeek = List.generate(7, (index) => {'To do': 0, 'Done': 0});
 
   late Future<Map<String, String>> fetchDetails;
 
@@ -35,29 +40,56 @@ class _AccountState extends State<Account>{
   @override
   void initState() {
     super.initState();
+
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User does not exist!');
+    }
+    userID = user.uid;
+
     _getUserDetails();
+    _tooltipBehavior = TooltipBehavior(enable: true);
+    _getDataForBarChart();
     _getCategoriesPercentages();
   }
 
   void _getUserDetails() async {
     fetchDetails = userServices.getUserDetails();
     Map<String, String> userDetails = await userServices.getUserDetails();
-    setState(() {
-      userName = userDetails['userName']!;
-      userEmail = userDetails['userEmail']!;
-      userPhoto = userDetails['userPhoto']!;
-    });
+    if (mounted) {
+      setState(() {
+        userName = userDetails['userName']!;
+        userEmail = userDetails['userEmail']!;
+        userPhoto = userDetails['userPhoto']!;
+      });
+    }
   }
 
   void _getCategoriesPercentages() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw Exception('User does not exist!');
+    final categories = await getCategoryTaskPercentage(userID);
+    final totalTasksCount = await getTotalTasksCount(userID);
+    if (mounted) {
+      setState(() {
+        _categories = categories;
+        _totalTasksCount = totalTasksCount;
+      });
     }
-    String userID = user.uid;
+  }
 
-    categories = await getCategoryTaskPercentage(userID);
-    totalTasksCount = await getTotalTasksCount(userID);
+  void _getDataForBarChart() async {
+    final today = DateTime.now();
+    final dayOfWeek = today.weekday;
+    final startOfWeek = today.subtract(Duration(days: dayOfWeek - 1));
+    final endOfWeek = today.add(Duration(days: DateTime.daysPerWeek - dayOfWeek));
+    _startOfWeek = DateFormat('yyyy-MM-dd').format(startOfWeek);
+    _endOfWeek = DateFormat('yyyy-MM-dd').format(endOfWeek);
+
+    final noOfTodoAndDoneTasksForWeek = await getNumberOfTodoAndDoneTasksForWeek(userID, _startOfWeek, _endOfWeek);
+    if (mounted) {
+      setState(() {
+        _noOfTodoAndDoneTasksForWeek = noOfTodoAndDoneTasksForWeek;
+      });
+    }
   }
 
   @override
@@ -119,7 +151,10 @@ class _AccountState extends State<Account>{
                           child: Column(
                               children: [
                                 buildProfile(),
+                                buildBarChart(),
+                                const SizedBox(height: 20),
                                 buildPieChart(),
+                                const SizedBox(height: 20),
                               ]
                           ),
                         );
@@ -235,14 +270,34 @@ class _AccountState extends State<Account>{
       ),
       child: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 30, right: 30, top: 10),
-            child: Text(
-              'Distribuția procentuală a sarcinilor pe categorii',
+          Padding(
+            padding: const EdgeInsets.only(left: 30, right: 30, top: 15),
+            child: RichText(
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: font1,
-                fontSize: 17,
+              text: const TextSpan(
+                text: 'Percentage distribution of ',
+                style: TextStyle(
+                  fontFamily: font1,
+                  fontSize: 18,
+                  color: Colors.black,
+                ),
+                children: <TextSpan>[
+                  TextSpan(
+                    text: 'tasks ',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextSpan(
+                    text: 'by ',
+                  ),
+                  TextSpan(
+                    text: 'category',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -255,16 +310,18 @@ class _AccountState extends State<Account>{
                     PieChartData(
                       pieTouchData: PieTouchData(
                         touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                          setState(() {
-                            if (!event.isInterestedForInteractions ||
-                                pieTouchResponse == null ||
-                                pieTouchResponse.touchedSection == null) {
-                              touchedIndex = -1;
-                              return;
-                            }
-                            touchedIndex = pieTouchResponse
-                                .touchedSection!.touchedSectionIndex;
-                          });
+                          if (mounted) {
+                            setState(() {
+                              if (!event.isInterestedForInteractions ||
+                                  pieTouchResponse == null ||
+                                  pieTouchResponse.touchedSection == null) {
+                                touchedIndex = -1;
+                                return;
+                              }
+                              touchedIndex = pieTouchResponse
+                                  .touchedSection!.touchedSectionIndex;
+                            });
+                          }
                         },
                       ),
                       borderData: FlBorderData(
@@ -272,7 +329,7 @@ class _AccountState extends State<Account>{
                       ),
                       sectionsSpace: 0,
                       centerSpaceRadius: 30,
-                      sections: categories.map((category) {
+                      sections: _categories.map((category) {
                         final index = category['index'];
                         final isTouched = index == touchedIndex;
                         final fontSize = isTouched ? 25.0 : 16.0;
@@ -303,7 +360,7 @@ class _AccountState extends State<Account>{
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.end,
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: categories.map((category) {
+                        children: _categories.map((category) {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4.0),
                             child: Indicator(
@@ -323,4 +380,93 @@ class _AccountState extends State<Account>{
       )
     );
   }
+
+  Widget buildBarChart() {
+    final List<ChartData> barChartData = <ChartData>[
+      ChartData('Monday', _noOfTodoAndDoneTasksForWeek[0]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[0]['Done']?.toDouble()),
+      ChartData('Tuesday', _noOfTodoAndDoneTasksForWeek[1]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[1]['Done']?.toDouble()),
+      ChartData('Wednesday', _noOfTodoAndDoneTasksForWeek[2]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[2]['Done']?.toDouble()),
+      ChartData('Thursday', _noOfTodoAndDoneTasksForWeek[3]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[3]['Done']?.toDouble()),
+      ChartData('Friday', _noOfTodoAndDoneTasksForWeek[4]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[4]['Done']?.toDouble()),
+      ChartData('Saturday', _noOfTodoAndDoneTasksForWeek[5]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[5]['Done']?.toDouble()),
+      ChartData('Sunday', _noOfTodoAndDoneTasksForWeek[6]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[6]['Done']?.toDouble()),
+    ];
+    return Container(
+        width: MediaQuery.of(context).size.width - 30,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 30, right: 30, top: 10),
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: const TextSpan(
+                  text: 'Distribution of ',
+                  style: TextStyle(
+                    fontFamily: font1,
+                    fontSize: 18,
+                    color: Colors.black,
+                  ),
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: 'To do',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' and ',
+                    ),
+                    TextSpan(
+                      text: 'Done',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' tasks',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SfCartesianChart(
+                primaryXAxis: const CategoryAxis(),
+                tooltipBehavior: _tooltipBehavior,
+                series: <CartesianSeries>[
+                  ColumnSeries<ChartData, String>(
+                    dataSource: barChartData,
+                    xValueMapper: (ChartData data, _) => data.x,
+                    yValueMapper: (ChartData data, _) => data.y,
+                    name: 'To do',
+                    onPointTap: (ChartPointDetails details) {
+                      _tooltipBehavior.showByIndex(0, details.pointIndex!);
+                    },
+                  ),
+                  ColumnSeries<ChartData, String>(
+                    dataSource: barChartData,
+                    xValueMapper: (ChartData data, _) => data.x,
+                    yValueMapper: (ChartData data, _) => data.y1,
+                    name: 'Done',
+                    onPointTap: (ChartPointDetails details) {
+                      _tooltipBehavior.showByIndex(1, details.pointIndex!);
+                    },
+                  ),
+                ]
+            ),
+          ],
+        )
+    );
+  }
+
+}
+
+class ChartData {
+  ChartData(this.x, this.y, this.y1);
+  final String x;
+  final double? y;
+  final double? y1;
 }

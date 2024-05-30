@@ -22,7 +22,7 @@ class Task {
   Task(this.userID, this.title, this.description, this.category, this.date, this.startTime, this.deadline, this.priority, this.destination, this.status, this.createdAt);
 
   Future<void> addToFirestore() async {
-    String formattedDate = DateFormat('dd-MM-yyyy').format(date);
+    String formattedDate = DateFormat('yyyy-MM-dd').format(date);
 
     try {
       if( title == '') {
@@ -151,7 +151,7 @@ Future<String> getCategoryId(String userID, String category) async {
 }
 
 Future<List<Task>> getTasksForDay(DateTime day, String userID) async {
-  String formattedDate = DateFormat('dd-MM-yyyy').format(day);
+  String formattedDate = DateFormat('yyyy-MM-dd').format(day);
 
   QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore
       .collection('users')
@@ -228,7 +228,7 @@ Future<void> updateStatus(String userID, String task, String formattedDate, Stri
 
 Future<List<Map<String, dynamic>>> getAllTasksForToday(String userID) async {
   final todayDate = DateTime.now();
-  String formattedDate = DateFormat('dd-MM-yyyy').format(todayDate);
+  String formattedDate = DateFormat('yyyy-MM-dd').format(todayDate);
   List<Map<String, dynamic>> tasksData = [];
 
   try {
@@ -279,7 +279,7 @@ Future<List<Map<String, dynamic>>> getAllTasksForToday(String userID) async {
 
 Future<List<Map<String, dynamic>>> getTasksByCategoryForToday(String userID, String category) async {
   final todayDate = DateTime.now();
-  String formattedDate = DateFormat('dd-MM-yyyy').format(todayDate);
+  String formattedDate = DateFormat('yyyy-MM-dd').format(todayDate);
   List<Map<String, dynamic>> tasksData = [];
 
   try {
@@ -421,5 +421,82 @@ Future<List<Map<String, dynamic>>> getCategoryTaskPercentage(String userID) asyn
     return categoryTaskPercentages;
   } catch (e) {
     throw Exception('Error fetching category task percentages: $e');
+  }
+}
+
+Future<int> getTasksCountForDay(String userID, String date) async {
+  try {
+    final dateSnapshot = await _firestore
+        .collection('users')
+        .doc(userID)
+        .collection('tasks')
+        .doc(date)
+        .get();
+
+    if (dateSnapshot.exists) {
+      int tasksCountForDay = dateSnapshot['tasksCount'];
+      return tasksCountForDay;
+    } else {
+      return 0;
+    }
+  } catch (e) {
+    throw Exception('Error fetching tasks count for day $date: $e');
+  }
+}
+
+Future<Map<String, int>> getNumberOfTodoAndDoneTaskForDay(String userID, String date) async {
+  try {
+    QuerySnapshot doneTasksSnapshot = await _firestore
+        .collection('users')
+        .doc(userID)
+        .collection('tasks')
+        .doc(date)
+        .collection('day tasks')
+        .where('status', isEqualTo: 'Done')
+        .get();
+
+    int doneTasksCountForDay = doneTasksSnapshot.size;
+    int totalNumberOfTasksForDay = await getTasksCountForDay(userID, date);
+    int todoTasksCountForDay = totalNumberOfTasksForDay - doneTasksCountForDay;
+
+    return {
+      'To do': todoTasksCountForDay,
+      'Done': doneTasksCountForDay,
+    };
+  } catch (e) {
+    throw Exception('Error fetching number of To do and Done tasks for $date: $e');
+  }
+}
+
+Future<List> getNumberOfTodoAndDoneTasksForWeek(String userID, String startOfWeek, String endOfWeek) async {
+  try {
+    final datesSnapshot = await _firestore
+        .collection('users')
+        .doc(userID)
+        .collection('tasks')
+        .where(FieldPath.documentId, isGreaterThanOrEqualTo: startOfWeek)
+        .where(FieldPath.documentId, isLessThanOrEqualTo: endOfWeek)
+        .orderBy(FieldPath.documentId)
+        .get();
+
+    List<Map<String, int>> noOfTodoAndDoneTasksForWeek = [];
+    if (datesSnapshot.size > 0) {
+
+      for (var date in datesSnapshot.docs) {
+        Map<String, int> noOfTodoAndDoneTasksForDay = await getNumberOfTodoAndDoneTaskForDay(userID, date.id);
+
+        noOfTodoAndDoneTasksForWeek.add(noOfTodoAndDoneTasksForDay);
+        if (noOfTodoAndDoneTasksForWeek.length < 7) {
+          noOfTodoAndDoneTasksForWeek += List.generate(7-noOfTodoAndDoneTasksForWeek.length,
+                  (index) => {'To do': 0, 'Done': 0});
+        }
+      }
+    } else {
+      noOfTodoAndDoneTasksForWeek = List.generate(7, (index) => {'To do': 0, 'Done': 0});
+    }
+
+    return noOfTodoAndDoneTasksForWeek;
+  } catch (e) {
+    throw Exception('Error fetching number of To do and Done tasks for week: $e');
   }
 }

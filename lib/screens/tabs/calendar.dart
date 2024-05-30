@@ -115,7 +115,7 @@ class _CalendarState extends State<Calendar>{
                             },
                             calendarBuilders: CalendarBuilders(
                               markerBuilder: (context, date, events) {
-                                String dateString = DateFormat('dd-MM-yyyy').format(date);
+                                String dateString = DateFormat('yyyy-MM-dd').format(date);
                                 final tasksCount = _tasksCount[dateString];
                                 if (tasksCount != null) {
                                   return Positioned(

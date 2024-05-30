@@ -50,7 +50,7 @@ class _TasksListState extends State<TasksList> {
   @override
   Widget build(BuildContext context) {
     final todayDate = DateTime.now();
-    String formattedDate = DateFormat('dd-MM-yyyy').format(todayDate);
+    String formattedDate = DateFormat('yyyy-MM-dd').format(todayDate);
 
     return ListView.builder(
       itemCount: tasksData.length,
