@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import '../../../util/components.dart';
 import '../../../util/constants.dart';
 
+bool isTaskDeleting = false;
+
 class TasksList extends StatefulWidget {
   final String category;
   const TasksList({super.key, required this.category});
@@ -42,9 +44,16 @@ class _TasksListState extends State<TasksList> {
     widget.category == "All"
       ? tasks = await getAllTasksForToday(userID!)
       : tasks = await getTasksByCategoryForToday(userID!, widget.category);
-    setState(() {
-      tasksData = tasks;
-    });
+    if (mounted) {
+      setState(() {
+        tasksData = tasks;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -77,8 +86,14 @@ class _TasksListState extends State<TasksList> {
                   ),
                 ),
                 onDismissed: (direction) async {
+                  setState(() {
+                    tasksData.removeAt(index);
+                    isTaskDeleting = true;
+                  });
                   await deleteTask(userID!, task['id'], formattedDate, task['category']);
-                  setState(() {tasksData.removeAt(index);});
+                  setState(() {
+                    isTaskDeleting = false;
+                  });
                 },
                 child: GestureDetector(
                   onTap: () {

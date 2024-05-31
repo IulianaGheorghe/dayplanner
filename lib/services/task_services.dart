@@ -468,7 +468,7 @@ Future<Map<String, int>> getNumberOfTodoAndDoneTaskForDay(String userID, String 
   }
 }
 
-Future<List> getNumberOfTodoAndDoneTasksForWeek(String userID, String startOfWeek, String endOfWeek) async {
+Future<List<Map<String, int>>> getNumberOfTodoAndDoneTasksForWeek(String userID, String startOfWeek, String endOfWeek) async {
   try {
     final datesSnapshot = await _firestore
         .collection('users')

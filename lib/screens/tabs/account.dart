@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:dayplanner/screens/others/task/tasks_list.dart';
 import 'package:dayplanner/services/task_services.dart';
 import 'package:dayplanner/services/user_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -30,8 +32,8 @@ class _AccountState extends State<Account>{
   late TooltipBehavior _tooltipBehavior;
   String _startOfWeek = '';
   String _endOfWeek = '';
-  List _noOfTodoAndDoneTasksForWeek = List.generate(7, (index) => {'To do': 0, 'Done': 0});
 
+  late Future<List<Map<String, int>>> _noOfTodoAndDoneTasksForWeek;
   late Future<Map<String, String>> fetchDetails;
 
   FirebaseAuthMethods authMethods = FirebaseAuthMethods();
@@ -40,7 +42,6 @@ class _AccountState extends State<Account>{
   @override
   void initState() {
     super.initState();
-
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       throw Exception('User does not exist!');
@@ -56,24 +57,16 @@ class _AccountState extends State<Account>{
   void _getUserDetails() async {
     fetchDetails = userServices.getUserDetails();
     Map<String, String> userDetails = await userServices.getUserDetails();
-    if (mounted) {
-      setState(() {
-        userName = userDetails['userName']!;
-        userEmail = userDetails['userEmail']!;
-        userPhoto = userDetails['userPhoto']!;
-      });
-    }
+    setState(() {
+      userName = userDetails['userName']!;
+      userEmail = userDetails['userEmail']!;
+      userPhoto = userDetails['userPhoto']!;
+    });
   }
 
   void _getCategoriesPercentages() async {
-    final categories = await getCategoryTaskPercentage(userID);
-    final totalTasksCount = await getTotalTasksCount(userID);
-    if (mounted) {
-      setState(() {
-        _categories = categories;
-        _totalTasksCount = totalTasksCount;
-      });
-    }
+    _categories = await getCategoryTaskPercentage(userID);
+    _totalTasksCount = await getTotalTasksCount(userID);
   }
 
   void _getDataForBarChart() async {
@@ -84,16 +77,14 @@ class _AccountState extends State<Account>{
     _startOfWeek = DateFormat('yyyy-MM-dd').format(startOfWeek);
     _endOfWeek = DateFormat('yyyy-MM-dd').format(endOfWeek);
 
-    final noOfTodoAndDoneTasksForWeek = await getNumberOfTodoAndDoneTasksForWeek(userID, _startOfWeek, _endOfWeek);
-    if (mounted) {
-      setState(() {
-        _noOfTodoAndDoneTasksForWeek = noOfTodoAndDoneTasksForWeek;
-      });
-    }
+    _noOfTodoAndDoneTasksForWeek = getNumberOfTodoAndDoneTasksForWeek(userID, _startOfWeek, _endOfWeek);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isTaskDeleting) {
+
+    }
     return MaterialApp(
       theme: ThemeData(
         popupMenuTheme: PopupMenuThemeData(
@@ -310,18 +301,16 @@ class _AccountState extends State<Account>{
                     PieChartData(
                       pieTouchData: PieTouchData(
                         touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                          if (mounted) {
-                            setState(() {
-                              if (!event.isInterestedForInteractions ||
-                                  pieTouchResponse == null ||
-                                  pieTouchResponse.touchedSection == null) {
-                                touchedIndex = -1;
-                                return;
-                              }
-                              touchedIndex = pieTouchResponse
-                                  .touchedSection!.touchedSectionIndex;
-                            });
-                          }
+                          setState(() {
+                            if (!event.isInterestedForInteractions ||
+                                pieTouchResponse == null ||
+                                pieTouchResponse.touchedSection == null) {
+                              touchedIndex = -1;
+                              return;
+                            }
+                            touchedIndex = pieTouchResponse
+                                .touchedSection!.touchedSectionIndex;
+                          });
                         },
                       ),
                       borderData: FlBorderData(
@@ -382,83 +371,98 @@ class _AccountState extends State<Account>{
   }
 
   Widget buildBarChart() {
-    final List<ChartData> barChartData = <ChartData>[
-      ChartData('Monday', _noOfTodoAndDoneTasksForWeek[0]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[0]['Done']?.toDouble()),
-      ChartData('Tuesday', _noOfTodoAndDoneTasksForWeek[1]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[1]['Done']?.toDouble()),
-      ChartData('Wednesday', _noOfTodoAndDoneTasksForWeek[2]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[2]['Done']?.toDouble()),
-      ChartData('Thursday', _noOfTodoAndDoneTasksForWeek[3]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[3]['Done']?.toDouble()),
-      ChartData('Friday', _noOfTodoAndDoneTasksForWeek[4]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[4]['Done']?.toDouble()),
-      ChartData('Saturday', _noOfTodoAndDoneTasksForWeek[5]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[5]['Done']?.toDouble()),
-      ChartData('Sunday', _noOfTodoAndDoneTasksForWeek[6]['To do']?.toDouble(), _noOfTodoAndDoneTasksForWeek[6]['Done']?.toDouble()),
-    ];
-    return Container(
-        width: MediaQuery.of(context).size.width - 30,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 30, right: 30, top: 10),
-              child: RichText(
-                textAlign: TextAlign.center,
-                text: const TextSpan(
-                  text: 'Distribution of ',
-                  style: TextStyle(
-                    fontFamily: font1,
-                    fontSize: 18,
-                    color: Colors.black,
+    return FutureBuilder<List<Map<String, int>>>(
+      future: _noOfTodoAndDoneTasksForWeek,
+      builder: (BuildContext context, AsyncSnapshot<List<Map<String, int>>> snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Text('Error: ${snapshot.error}'),
+          );
+        } else if (snapshot.hasData) {
+          final List<ChartData> barChartData = <ChartData>[
+            ChartData('Monday', snapshot.data![0]['To do']?.toDouble(), snapshot.data![0]['Done']?.toDouble()),
+            ChartData('Tuesday', snapshot.data![1]['To do']?.toDouble(), snapshot.data![1]['Done']?.toDouble()),
+            ChartData('Wednesday', snapshot.data![2]['To do']?.toDouble(), snapshot.data![2]['Done']?.toDouble()),
+            ChartData('Thursday', snapshot.data![3]['To do']?.toDouble(), snapshot.data![3]['Done']?.toDouble()),
+            ChartData('Friday', snapshot.data![4]['To do']?.toDouble(), snapshot.data![4]['Done']?.toDouble()),
+            ChartData('Saturday', snapshot.data![5]['To do']?.toDouble(), snapshot.data![5]['Done']?.toDouble()),
+            ChartData('Sunday', snapshot.data![6]['To do']?.toDouble(), snapshot.data![6]['Done']?.toDouble()),
+          ];
+          return Container(
+            width: MediaQuery.of(context).size.width - 30,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 30, right: 30, top: 10),
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: const TextSpan(
+                      text: 'Distribution of ',
+                      style: TextStyle(
+                        fontFamily: font1,
+                        fontSize: 18,
+                        color: Colors.black,
+                      ),
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: 'To do',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        TextSpan(
+                          text: ' and ',
+                        ),
+                        TextSpan(
+                          text: 'Done',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        TextSpan(
+                          text: ' tasks',
+                        ),
+                      ],
+                    ),
                   ),
-                  children: <TextSpan>[
-                    TextSpan(
-                      text: 'To do',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextSpan(
-                      text: ' and ',
-                    ),
-                    TextSpan(
-                      text: 'Done',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextSpan(
-                      text: ' tasks',
-                    ),
-                  ],
                 ),
-              ),
-            ),
-            SfCartesianChart(
-                primaryXAxis: const CategoryAxis(),
-                tooltipBehavior: _tooltipBehavior,
-                series: <CartesianSeries>[
-                  ColumnSeries<ChartData, String>(
-                    dataSource: barChartData,
-                    xValueMapper: (ChartData data, _) => data.x,
-                    yValueMapper: (ChartData data, _) => data.y,
-                    name: 'To do',
-                    onPointTap: (ChartPointDetails details) {
-                      _tooltipBehavior.showByIndex(0, details.pointIndex!);
-                    },
-                  ),
-                  ColumnSeries<ChartData, String>(
-                    dataSource: barChartData,
-                    xValueMapper: (ChartData data, _) => data.x,
-                    yValueMapper: (ChartData data, _) => data.y1,
-                    name: 'Done',
-                    onPointTap: (ChartPointDetails details) {
-                      _tooltipBehavior.showByIndex(1, details.pointIndex!);
-                    },
-                  ),
-                ]
-            ),
-          ],
-        )
+                SfCartesianChart(
+                    primaryXAxis: const CategoryAxis(),
+                    tooltipBehavior: _tooltipBehavior,
+                    series: <CartesianSeries>[
+                      ColumnSeries<ChartData, String>(
+                        dataSource: barChartData,
+                        xValueMapper: (ChartData data, _) => data.x,
+                        yValueMapper: (ChartData data, _) => data.y,
+                        name: 'To do',
+                        onPointTap: (ChartPointDetails details) {
+                          _tooltipBehavior.showByIndex(0, details.pointIndex!);
+                        },
+                      ),
+                      ColumnSeries<ChartData, String>(
+                        dataSource: barChartData,
+                        xValueMapper: (ChartData data, _) => data.x,
+                        yValueMapper: (ChartData data, _) => data.y1,
+                        name: 'Done',
+                        onPointTap: (ChartPointDetails details) {
+                          _tooltipBehavior.showByIndex(1, details.pointIndex!);
+                        },
+                      ),
+                    ]
+                ),
+              ],
+            )
+          );
+        } else {
+          return const Center(
+            child: Text('No data available'),
+          );
+        }
+      },
     );
   }
 
