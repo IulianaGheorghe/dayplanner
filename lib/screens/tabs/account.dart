@@ -33,7 +33,7 @@ class _AccountState extends State<Account>{
   String _startOfWeek = '';
   String _endOfWeek = '';
 
-  late Future<List<Map<String, int>>> _noOfTodoAndDoneTasksForWeek;
+  late Future<List<Map<String, dynamic>>> _noOfTodoAndDoneTasksForWeek;
   late Future<Map<String, String>> fetchDetails;
 
   FirebaseAuthMethods authMethods = FirebaseAuthMethods();
@@ -371,10 +371,16 @@ class _AccountState extends State<Account>{
   }
 
   Widget buildBarChart() {
-    return FutureBuilder<List<Map<String, int>>>(
+    return FutureBuilder<List<Map<String, dynamic>>>(
       future: _noOfTodoAndDoneTasksForWeek,
-      builder: (BuildContext context, AsyncSnapshot<List<Map<String, int>>> snapshot) {
-        if (snapshot.hasError) {
+      builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor:AlwaysStoppedAnimation<Color>(profilePageColor),
+            ),
+          );
+        } else if (snapshot.hasError) {
           return Center(
             child: Text('Error: ${snapshot.error}'),
           );

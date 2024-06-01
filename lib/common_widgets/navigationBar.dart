@@ -39,7 +39,7 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
     }
   }
 
-  void handleTabSelection(int selectedIndex) async {
+  void handleTabSelection(int selectedIndex) async{
     if (selectedIndex == 1 || selectedIndex == 2) {
       await waitForTaskDeletion();
     }
@@ -50,21 +50,17 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
     }
   }
 
+  final screens = [
+    const Home(),
+    const Calendar(),
+    const Account(),
+  ];
   @override
   Widget build(BuildContext context) {
-    final screens = [
-      const Home(),
-      const Calendar(),
-      const Account(),
-    ];
-
     return Scaffold(
       body: Stack(
         children: [
-          IndexedStack(
-            index: index,
-            children: screens,
-          ),
+          screens[index],
           if (isLoading)
             Container(
               color: Colors.black.withOpacity(0.5),

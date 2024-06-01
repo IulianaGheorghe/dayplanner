@@ -444,7 +444,7 @@ Future<int> getTasksCountForDay(String userID, String date) async {
   }
 }
 
-Future<Map<String, int>> getNumberOfTodoAndDoneTaskForDay(String userID, String date) async {
+Future<Map<String, dynamic>> getNumberOfTodoAndDoneTaskForDay(String userID, String date) async {
   try {
     QuerySnapshot doneTasksSnapshot = await _firestore
         .collection('users')
@@ -458,17 +458,19 @@ Future<Map<String, int>> getNumberOfTodoAndDoneTaskForDay(String userID, String 
     int doneTasksCountForDay = doneTasksSnapshot.size;
     int totalNumberOfTasksForDay = await getTasksCountForDay(userID, date);
     int todoTasksCountForDay = totalNumberOfTasksForDay - doneTasksCountForDay;
+    int weekday = DateTime.parse(date).weekday;
 
     return {
       'To do': todoTasksCountForDay,
       'Done': doneTasksCountForDay,
+      'Day': weekday,
     };
   } catch (e) {
     throw Exception('Error fetching number of To do and Done tasks for $date: $e');
   }
 }
 
-Future<List<Map<String, int>>> getNumberOfTodoAndDoneTasksForWeek(String userID, String startOfWeek, String endOfWeek) async {
+Future<List<Map<String, dynamic>>> getNumberOfTodoAndDoneTasksForWeek(String userID, String startOfWeek, String endOfWeek) async {
   try {
     final datesSnapshot = await _firestore
         .collection('users')
@@ -479,20 +481,24 @@ Future<List<Map<String, int>>> getNumberOfTodoAndDoneTasksForWeek(String userID,
         .orderBy(FieldPath.documentId)
         .get();
 
-    List<Map<String, int>> noOfTodoAndDoneTasksForWeek = [];
+    List<Map<String, dynamic>> noOfTodoAndDoneTasksForWeek = [];
     if (datesSnapshot.size > 0) {
 
       for (var date in datesSnapshot.docs) {
-        Map<String, int> noOfTodoAndDoneTasksForDay = await getNumberOfTodoAndDoneTaskForDay(userID, date.id);
+        Map<String, dynamic> noOfTodoAndDoneTasksForDay = await getNumberOfTodoAndDoneTaskForDay(userID, date.id);
 
         noOfTodoAndDoneTasksForWeek.add(noOfTodoAndDoneTasksForDay);
-        if (noOfTodoAndDoneTasksForWeek.length < 7) {
-          noOfTodoAndDoneTasksForWeek += List.generate(7-noOfTodoAndDoneTasksForWeek.length,
-                  (index) => {'To do': 0, 'Done': 0});
+      }
+      if (noOfTodoAndDoneTasksForWeek.length < 7) {
+        for (int i = 1; i <= 7; i++) {
+          if (!noOfTodoAndDoneTasksForWeek.any((map) => map['Day'] == i)) {
+            noOfTodoAndDoneTasksForWeek.add({'To do': 0, 'Done': 0, 'Day': i});
+          }
         }
+        noOfTodoAndDoneTasksForWeek.sort((a, b) => a['Day'].compareTo(b['Day']));
       }
     } else {
-      noOfTodoAndDoneTasksForWeek = List.generate(7, (index) => {'To do': 0, 'Done': 0});
+      noOfTodoAndDoneTasksForWeek = List.generate(7, (index) => {'To do': 0, 'Done': 0, 'Day': index+1});
     }
 
     return noOfTodoAndDoneTasksForWeek;
