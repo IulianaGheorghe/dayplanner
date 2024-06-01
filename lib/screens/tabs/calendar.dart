@@ -212,17 +212,4 @@ class _CalendarState extends State<Calendar>{
     );
   }
 
-
-  Color getColorForPriority(String option) {
-    switch (option) {
-      case 'Low':
-        return Colors.blue;
-      case 'Medium':
-        return Colors.orange;
-      case 'High':
-        return Colors.red;
-      default:
-        return Colors.white;
-    }
-  }
 }

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -8,9 +9,6 @@ import '../../../services/auth_methods.dart';
 import '../../../services/task_services.dart';
 import '../../../util/components.dart';
 import '../../../util/constants.dart';
-
-String valueChoose = "Low";
-List priorityList = ["Low", "Medium", "High"];
 
 class AddTask extends StatefulWidget{
   const AddTask({super.key});
@@ -29,8 +27,29 @@ class _AddTaskState extends State<AddTask>{
   LatLng? _selectedDestination;
   bool _destinationSelected = false;
   String _selectedPriority = "Low";
+  String _selectedCategory = "No category";
+  String _status = "To do";
+  String userID = '';
+  List categoriesList = [];
 
   FirebaseAuthMethods authMethods = FirebaseAuthMethods();
+
+  @override
+  void initState() {
+    super.initState();
+
+    User? user = FirebaseAuth.instance.currentUser;
+    userID = user!.uid;
+
+    _handleCategories();
+  }
+
+  void _handleCategories() async {
+    final categories = await getCategories(userID);
+    setState(() {
+      categoriesList = categories;
+    });
+  }
 
   Future<void> _selectDate() async {
     final DateTime? pickedDate = await showDatePicker(
@@ -81,11 +100,13 @@ class _AddTaskState extends State<AddTask>{
         userID,
         _title,
         _description,
+        _selectedCategory,
         _selectedDate,
         _selectedStartTime,
         _selectedDeadline,
         _selectedPriority,
         _selectedDestination,
+        _status,
         DateTime.now(),
       );
       try {
@@ -103,6 +124,10 @@ class _AddTaskState extends State<AddTask>{
       }
     }
   }
+
+  String choosePriority = "Low";
+  List priorityList = ["Low", "Medium", "High"];
+  String chooseCategory = "No category";
 
   @override
   Widget build(BuildContext context) {
@@ -169,6 +194,50 @@ class _AddTaskState extends State<AddTask>{
                     },
                   ),
                   const SizedBox(height: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      titleStyle('Category', secondaryTitleSize),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField(
+                        dropdownColor: Colors.grey.shade200,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                          fillColor: Colors.white.withOpacity(0.8),
+                          filled: true,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(color: Colors.transparent),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(color: Colors.transparent),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        value: chooseCategory,
+                        items: categoriesList.map(
+                                (category) =>
+                                DropdownMenuItem(
+                                  value: category,
+                                  child: Text(
+                                        category,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: chooseCategory == category ? primaryColor : Colors.black,
+                                        ),
+                                      ),
+                                )
+                        ).toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            chooseCategory = val as String;
+                            _selectedCategory = chooseCategory;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -193,7 +262,9 @@ class _AddTaskState extends State<AddTask>{
                                   children: [
                                     const Icon(CupertinoIcons.calendar),
                                     const SizedBox(width: 16),
-                                    Text(formatDate(_selectedDate)),
+                                    Text(formatDate(_selectedDate),
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -223,7 +294,9 @@ class _AddTaskState extends State<AddTask>{
                                   children: [
                                     const Icon(CupertinoIcons.clock),
                                     const SizedBox(width: 16),
-                                    Text(_selectedStartTime != null ? formatTime(_selectedStartTime!) : 'hh : mm'),
+                                    Text(_selectedStartTime != null ? formatTime(_selectedStartTime!) : 'hh : mm',
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -258,7 +331,7 @@ class _AddTaskState extends State<AddTask>{
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              value: valueChoose,
+                              value: choosePriority,
                               items: priorityList.map(
                                       (e) =>
                                       DropdownMenuItem(
@@ -271,15 +344,17 @@ class _AddTaskState extends State<AddTask>{
                                               color: getColorForPriority(e),
                                               margin: const EdgeInsets.only(right: 8),
                                             ),
-                                            Text(e),
+                                            Text(e,
+                                              style: const TextStyle(fontWeight: FontWeight.bold),
+                                            ),
                                           ],
                                         ),
                                       )
                               ).toList(),
                               onChanged: (val) {
                                 setState(() {
-                                  valueChoose = val as String;
-                                  _selectedPriority = valueChoose;
+                                  choosePriority = val as String;
+                                  _selectedPriority = choosePriority;
                                 });
                               },
                             ),
@@ -308,7 +383,9 @@ class _AddTaskState extends State<AddTask>{
                                   children: [
                                     const Icon(CupertinoIcons.clock),
                                     const SizedBox(width: 16),
-                                    Text(_selectedDeadline != null ? formatTime(_selectedDeadline!) : 'hh : mm'),
+                                    Text(_selectedDeadline != null ? formatTime(_selectedDeadline!) : 'hh : mm',
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -392,18 +469,5 @@ class _AddTaskState extends State<AddTask>{
 
   String formatTime(TimeOfDay time) {
     return '${time.hour}:${time.minute}';
-  }
-
-  Color getColorForPriority(String option) {
-    switch (option) {
-      case 'Low':
-        return Colors.blue;
-      case 'Medium':
-        return Colors.orange;
-      case 'High':
-        return Colors.red;
-      default:
-        return Colors.white;
-    }
   }
 }
