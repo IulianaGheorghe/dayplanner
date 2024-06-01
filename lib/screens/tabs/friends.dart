@@ -2,15 +2,19 @@ import 'package:dayplanner/util/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class Friends extends StatefulWidget{
+import '../../services/user_services.dart';
+
+class Friends extends StatefulWidget {
   const Friends({super.key});
 
   @override
   State<Friends> createState() => _FriendsState();
 }
 
-class _FriendsState extends State<Friends>{
+class _FriendsState extends State<Friends> {
   String userID = '';
+  List<Map<String, String>> friendsDetails = [];
+  UserServices userServices = UserServices();
 
   @override
   void initState() {
@@ -18,8 +22,18 @@ class _FriendsState extends State<Friends>{
 
     User? user = FirebaseAuth.instance.currentUser;
     userID = user!.uid;
+
+    getFriendsDetails();
   }
 
+  void getFriendsDetails() async {
+    friendsDetails = await userServices.getFriends();
+    setState(() {}); // Trigger UI update after fetching friends
+  }
+
+  Future<bool> _isValidID(String id) async {
+    return await userServices.isFriendIdValid(id);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,12 +42,12 @@ class _FriendsState extends State<Friends>{
         appBar: AppBar(
           backgroundColor: friendsPageColor,
           centerTitle: true,
-          title: const Text('Friends',
+          title: const Text(
+            'Friends',
             style: TextStyle(
                 fontFamily: font1,
                 fontSize: 23,
-                color: Colors.black
-            ),
+                color: Colors.black),
           ),
         ),
         body: Stack(
@@ -43,16 +57,7 @@ class _FriendsState extends State<Friends>{
               'assets/images/t3.jpg',
               fit: BoxFit.cover,
             ),
-            SingleChildScrollView(
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height,
-                child: Column(
-                  children: [
-
-                  ],
-                ),
-              ),
-            ),
+            _friendsListWidget(),
           ],
         ),
         floatingActionButton: FloatingActionButton(
@@ -73,36 +78,187 @@ class _FriendsState extends State<Friends>{
     );
   }
 
+  Widget _friendsListWidget() {
+    return friendsDetails.isNotEmpty
+        ? ListView.builder(
+      itemCount: friendsDetails.length,
+      itemBuilder: (context, index) {
+        final friend = friendsDetails[index];
+        return Column(children: [
+          Dismissible(
+            key: UniqueKey(),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              color: Colors.red,
+              child: const Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: EdgeInsets.only(right: 16.0),
+                  child: Icon(
+                    Icons.delete,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            onDismissed: (direction) async {
+              setState(() {
+                friendsDetails.removeAt(index);
+              });
+              await userServices.deleteFriend(friend['uid']!);
+            },
+            child: GestureDetector(
+              onTap: () {
+                // Navigator.push(context, MaterialPageRoute(
+                //   builder: (context) =>
+                //
+                // ),
+                // );
+              },
+              child: Container(
+                alignment: Alignment.center,
+                margin: const EdgeInsets.all(15),
+                height: 150,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: primaryColor,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.5),
+                      spreadRadius: 5,
+                      blurRadius: 7,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: CircleAvatar(
+                        radius: 60,
+                        backgroundImage: (friend['photo'] == '')
+                            ? const AssetImage('assets/images/user.png')
+                        as ImageProvider
+                            : NetworkImage(friend['photo']!),
+                      ),
+                    ),
+                    Text(
+                      friend['name']!,
+                      style: const TextStyle(
+                        color: buttonTextColor,
+                        fontSize: questionSize,
+                        fontFamily: font2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ]);
+      },
+    )
+        : Container(
+      padding: const EdgeInsets.all(40.0),
+      margin: const EdgeInsets.only(
+          left: 70, right: 70, top: 185, bottom: 190),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      child: Column(
+        children: [
+          Expanded(
+            child: Text(
+              "You don't have any friends yet.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: Colors.grey.shade700,
+                  fontSize: 18,
+                  fontFamily: font1),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              "Add a friend to see their progress and motivate each other ",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: Colors.blue.shade800,
+                  fontSize: 18,
+                  fontFamily: font1),
+            ),
+          ),
+          Expanded(
+              child: Icon(
+                Icons.sentiment_very_satisfied,
+                size: 50,
+                color: Colors.blue.shade800,
+              )),
+        ],
+      ),
+    );
+  }
+
   void _showAddIdDialog(BuildContext context) {
     TextEditingController idController = TextEditingController();
+    String? localErrorMessage;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add friend ID'),
-          content: TextField(
-            controller: idController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Enter ID'),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                String id = idController.text;
-
-                print('ID entered: $id');
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: const Text(
+                'Add friend ID',
+                style: TextStyle(fontFamily: font1),
+              ),
+              content: TextField(
+                controller: idController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Enter ID',
+                  errorText: localErrorMessage,
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: primaryColor),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    String friendId = idController.text;
+                    bool isValid = await _isValidID(friendId);
+                    if (friendId.isEmpty || !isValid) {
+                      setState(() {
+                        localErrorMessage = 'The ID is not valid.';
+                      });
+                    } else {
+                      userServices.addFriend(friendId);
+                      setState(() {
+                        localErrorMessage = null;
+                      });
+                      getFriendsDetails();
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: const Text(
+                    'Add',
+                    style: TextStyle(color: primaryColor),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );

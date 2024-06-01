@@ -125,4 +125,114 @@ class UserServices{
       throw Exception('Error updating account details: $e');
     }
   }
+
+  Future<bool> isFriendIdValid(String friendID) async {
+    try {
+      QuerySnapshot friendSnapshot = await _firestore
+        .collection('users')
+        .where('id', isEqualTo: friendID)
+        .limit(1)
+        .get();
+      return friendSnapshot.size > 0
+        ? true
+        : false;
+    } catch (e) {
+      throw Exception('Error checking friendID: $e');
+    }
+  }
+
+  Future<void> addFriend(String friendID) async {
+    User? currentUser = _auth.currentUser;
+    try {
+      QuerySnapshot friendSnapshot = await _firestore
+          .collection('users')
+          .where('id', isEqualTo: friendID)
+          .limit(1)
+          .get();
+      String dbIdForFriend = friendSnapshot.docs.first.id;
+
+      await _firestore.collection('users')
+        .doc(currentUser!.uid)
+        .collection('friends')
+        .add({
+          'id': dbIdForFriend,
+        });
+
+      await _firestore.collection('users')
+        .doc(dbIdForFriend)
+        .collection('friends')
+        .add({
+          'id': currentUser.uid,
+        });
+    } catch (e) {
+      throw Exception('Error adding friend: $e');
+    }
+  }
+
+  Future<Map<String, String>> getDetailsForFriend(String userID) async {
+    try {
+      DocumentSnapshot friendSnapshot = await _firestore
+          .collection('users')
+          .doc(userID)
+          .get();
+
+      String name = friendSnapshot['name'];
+      String photo = friendSnapshot['photo'];
+      String uid = friendSnapshot.id;
+      Map<String, String> friendDetails = {
+        'uid': uid,
+        'name': name,
+        'photo': photo
+      };
+
+      return friendDetails;
+    } catch (e) {
+      throw Exception('Error getting name and photo for friend $userID: $e');
+    }
+  }
+
+  Future<List<Map<String, String>>> getFriends() async {
+    User? currentUser = _auth.currentUser;
+    try {
+      QuerySnapshot friendsSnapshot = await _firestore
+          .collection('users')
+          .doc(currentUser!.uid)
+          .collection('friends')
+          .get();
+
+      List<dynamic> friendsIDs = friendsSnapshot.size > 0
+          ? friendsSnapshot.docs.map((doc) => doc['id']).toList()
+          : [];
+      
+      List<Map<String, String>> friendsDetails = [];
+      for (var friendID in friendsIDs) {
+        var friendNameAndPhoto = await getDetailsForFriend(friendID);
+        friendsDetails.add(friendNameAndPhoto);
+      }
+
+      return friendsDetails;
+    } catch (e) {
+      throw Exception('Error getting friends IDs for ${currentUser!.uid}: $e');
+    }
+  }
+
+  Future<void> deleteFriend(String friendUID) async {
+    User? currentUser = _auth.currentUser;
+
+    try {
+      await _firestore.collection("users")
+          .doc(currentUser!.uid)
+          .collection("friends")
+          .doc(friendUID)
+          .delete();
+
+      await _firestore.collection("users")
+          .doc(friendUID)
+          .collection("friends")
+          .doc(currentUser.uid)
+          .delete();
+    } catch (e) {
+      throw Exception('Error deleting friend: $e');
+    }
+  }
 }
