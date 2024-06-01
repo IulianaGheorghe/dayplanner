@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dayplanner/screens/others/task/task_details.dart';
 import 'package:dayplanner/services/task_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,6 +6,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../../util/components.dart';
 import '../../../util/constants.dart';
+
+bool isTaskDeleting = false;
 
 class TasksList extends StatefulWidget {
   final String category;
@@ -43,15 +44,22 @@ class _TasksListState extends State<TasksList> {
     widget.category == "All"
       ? tasks = await getAllTasksForToday(userID!)
       : tasks = await getTasksByCategoryForToday(userID!, widget.category);
-    setState(() {
-      tasksData = tasks;
-    });
+    if (mounted) {
+      setState(() {
+        tasksData = tasks;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final todayDate = DateTime.now();
-    String formattedDate = DateFormat('dd-MM-yyyy').format(todayDate);
+    String formattedDate = DateFormat('yyyy-MM-dd').format(todayDate);
 
     return ListView.builder(
       itemCount: tasksData.length,
@@ -62,7 +70,7 @@ class _TasksListState extends State<TasksList> {
         return Column(
             children: [
               Dismissible(
-                key: Key(task['id']),
+                key: UniqueKey(),
                 direction: DismissDirection.endToStart,
                 background: Container(
                   color: Colors.red,
@@ -78,15 +86,14 @@ class _TasksListState extends State<TasksList> {
                   ),
                 ),
                 onDismissed: (direction) async {
-                  await FirebaseFirestore.instance
-                      .collection("users")
-                      .doc(userID)
-                      .collection("tasks")
-                      .doc(formattedDate)
-                      .collection("day tasks")
-                      .doc(task['id'])
-                      .delete();
-                  setState(() {});
+                  setState(() {
+                    tasksData.removeAt(index);
+                    isTaskDeleting = true;
+                  });
+                  await deleteTask(userID!, task['id'], formattedDate, task['category']);
+                  setState(() {
+                    isTaskDeleting = false;
+                  });
                 },
                 child: GestureDetector(
                   onTap: () {

@@ -51,7 +51,8 @@ class FirebaseAuthMethods {
           .set({
             'name': name,
             'email': email,
-            'id': randomUserId
+            'id': randomUserId,
+            'photo': ''
           });
 
         addInitialCategories(credentials.user!.uid);
@@ -98,14 +99,6 @@ class FirebaseAuthMethods {
     } on FirebaseAuthException catch (e) {
       showSnackBar(context, e.message!);
     }
-  }
-
-  Future<String> getUserId() async {
-    String? userID;
-    final user = FirebaseAuth.instance.currentUser;
-    userID = user!.uid;
-
-    return userID;
   }
 }
 

@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dayplanner/util/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+
+FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
 class Task {
   String userID;
@@ -19,27 +22,26 @@ class Task {
   Task(this.userID, this.title, this.description, this.category, this.date, this.startTime, this.deadline, this.priority, this.destination, this.status, this.createdAt);
 
   Future<void> addToFirestore() async {
-    final firestore = FirebaseFirestore.instance;
-    String formattedDate = DateFormat('dd-MM-yyyy').format(date);
+    String formattedDate = DateFormat('yyyy-MM-dd').format(date);
 
     try {
       if( title == '') {
         throw Exception('Field cannot be empty.');
       } else {
-        DocumentReference documentRef = firestore.collection("users").doc(userID).collection("tasks").doc(formattedDate);
+        DocumentReference documentRef = _firestore.collection("users").doc(userID).collection("tasks").doc(formattedDate);
         DocumentSnapshot snapshot = await documentRef.get();
         if (snapshot.exists) {
           int currentNoOfTasks = snapshot.get('tasksCount');
           int incrementedValue = currentNoOfTasks + 1;
           await documentRef.update({'tasksCount': incrementedValue});
         } else {
-          await firestore.collection("users").doc(userID).collection("tasks")
+          await _firestore.collection("users").doc(userID).collection("tasks")
               .doc(formattedDate)
               .set({'date': date, 'tasksCount': 1})
               .catchError((error) => throw Exception("Failed to create document for day in tasks: $error"));
         }
 
-        DocumentReference newTaskRef = await firestore.collection("users")
+        DocumentReference newTaskRef = await _firestore.collection("users")
             .doc(userID)
             .collection("tasks")
             .doc(formattedDate)
@@ -59,7 +61,7 @@ class Task {
             }
           );
         String categoryId = await getCategoryId(userID, category);
-        await firestore.collection("users")
+        await _firestore.collection("users")
             .doc(userID)
             .collection("categories")
             .doc(categoryId)
@@ -69,6 +71,16 @@ class Task {
                 'taskRef': newTaskRef
               }
             );
+        DocumentReference documentRef2 = _firestore.collection("users")
+            .doc(userID)
+            .collection("categories")
+            .doc(categoryId);
+        DocumentSnapshot snapshot2 = await documentRef2.get();
+        if (snapshot2.exists) {
+          int currentNoOfTasks2 = snapshot2.get('tasksCount');
+          int incrementedValue2 = currentNoOfTasks2 + 1;
+          await documentRef2.update({'tasksCount': incrementedValue2});
+        }
       }
     } catch (e) {
       throw Exception('Task cannot be added to firebase.');
@@ -76,10 +88,55 @@ class Task {
   }
 }
 
+Future<void> deleteTask(String userID, String taskID, String formattedDate, String categoryName) async{
+  String categoryID = await getCategoryId(userID, categoryName);
+  Future<void> updateTaskCountFromTasks() async {
+    DocumentReference docRef = _firestore.collection("users").doc(userID).collection("tasks").doc(formattedDate);
+    DocumentSnapshot dateSnapshot = await docRef.get();
+    int currentTasksCount = dateSnapshot['tasksCount'];
+    int newTasksCount = currentTasksCount - 1;
+    await docRef.update({'tasksCount': newTasksCount});
+  }
+  Future<void> updateTaskCountFromCategories() async {
+    DocumentReference docRef = _firestore.collection("users").doc(userID).collection("categories").doc(categoryID);
+    DocumentSnapshot categorySnapshot = await docRef.get();
+    int currentTasksCount = categorySnapshot['tasksCount'];
+    int newTasksCount = currentTasksCount - 1;
+    await docRef.update({'tasksCount': newTasksCount});
+  }
+  Future<void> deleteTaskReferenceFromCategories() async {
+    DocumentReference docRef = _firestore.collection("users").doc(userID).collection("categories").doc(categoryID);
+    String taskRef = 'users/$userID/tasks/$formattedDate/day tasks/$taskID';
+    final taskSnapshot = await docRef
+        .collection('tasks')
+        .where('taskRef', isEqualTo: _firestore.doc(taskRef))
+        .limit(1)
+        .get();
+
+    String taskIdFromCategory = taskSnapshot.docs.first.id;
+    await docRef.collection('tasks')
+        .doc(taskIdFromCategory)
+        .delete();
+  }
+  try {
+    await updateTaskCountFromTasks();
+    await deleteTaskReferenceFromCategories();
+    await updateTaskCountFromCategories();
+    await _firestore.collection("users").doc(userID)
+        .collection("tasks")
+        .doc(formattedDate)
+        .collection("day tasks")
+        .doc(taskID)
+        .delete();
+  } catch (e) {
+    throw Exception('Error deleting task: $e');
+  }
+}
+
 Future<String> getCategoryId(String userID, String category) async {
   String id = '';
 
-  final snapshot = await FirebaseFirestore.instance
+  final snapshot = await _firestore
       .collection('users')
       .doc(userID)
       .collection('categories')
@@ -94,9 +151,9 @@ Future<String> getCategoryId(String userID, String category) async {
 }
 
 Future<List<Task>> getTasksForDay(DateTime day, String userID) async {
-  String formattedDate = DateFormat('dd-MM-yyyy').format(day);
+  String formattedDate = DateFormat('yyyy-MM-dd').format(day);
 
-  QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
+  QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore
       .collection('users')
       .doc(userID)
       .collection('tasks')
@@ -142,7 +199,7 @@ Future<Map<String, int>> getTasksCountForMonth(DateTime focusedDay, String userI
   int lastDayWeekday = lastDayOfMonth.weekday;
   DateTime lastVisibleDay = lastDayOfMonth.add(Duration(days: 7 - lastDayWeekday));
 
-  QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
+  QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore
       .collection('users')
       .doc(userID)
       .collection('tasks')
@@ -159,7 +216,7 @@ Future<Map<String, int>> getTasksCountForMonth(DateTime focusedDay, String userI
 }
 
 Future<void> updateStatus(String userID, String task, String formattedDate, String status) async {
-  await FirebaseFirestore.instance
+  await _firestore
       .collection("users")
       .doc(userID)
       .collection("tasks")
@@ -171,105 +228,114 @@ Future<void> updateStatus(String userID, String task, String formattedDate, Stri
 
 Future<List<Map<String, dynamic>>> getAllTasksForToday(String userID) async {
   final todayDate = DateTime.now();
-  String formattedDate = DateFormat('dd-MM-yyyy').format(todayDate);
+  String formattedDate = DateFormat('yyyy-MM-dd').format(todayDate);
   List<Map<String, dynamic>> tasksData = [];
 
-  final snapshot = await FirebaseFirestore.instance
-      .collection("users")
-      .doc(userID)
-      .collection("tasks")
-      .doc(formattedDate)
-      .collection("day tasks")
-      .get();
+  try {
+    final snapshot = await _firestore
+        .collection("users")
+        .doc(userID)
+        .collection("tasks")
+        .doc(formattedDate)
+        .collection("day tasks")
+        .get();
 
-  if (snapshot.docs.isNotEmpty) {
-    tasksData = snapshot.docs.map((doc) {
-      return {
-        'id': doc.id,
-        'title': doc['title'],
-        'description': doc['description'],
-        'category': doc['category'],
-        'date': doc['date'].toDate(),
-        'startTime': (doc['startTime'] != '')
-            ? TimeOfDay(
-          hour: int.parse(doc['startTime'].split(':')[0]),
-          minute: int.parse(doc['startTime'].split(':')[1]),
-        )
-            : null,
-        'deadline': (doc['deadline'] != '')
-            ? TimeOfDay(
-          hour: int.parse(doc['deadline'].split(':')[0]),
-          minute: int.parse(doc['deadline'].split(':')[1]),
-        )
-            : null,
-        'priority': doc['priority'],
-        'destination': (doc['destination'] != '')
-            ? LatLng(
-          double.parse(doc['destination'].split(',')[0]),
-          double.parse(doc['destination'].split(',')[1]),
-        )
-            : null,
-        'status': doc['status'],
-      };
-    }).toList();
+    if (snapshot.docs.isNotEmpty) {
+      tasksData = snapshot.docs.map((doc) {
+        return {
+          'id': doc.id,
+          'title': doc['title'],
+          'description': doc['description'],
+          'category': doc['category'],
+          'date': doc['date'].toDate(),
+          'startTime': (doc['startTime'] != '')
+              ? TimeOfDay(
+            hour: int.parse(doc['startTime'].split(':')[0]),
+            minute: int.parse(doc['startTime'].split(':')[1]),
+          )
+              : null,
+          'deadline': (doc['deadline'] != '')
+              ? TimeOfDay(
+            hour: int.parse(doc['deadline'].split(':')[0]),
+            minute: int.parse(doc['deadline'].split(':')[1]),
+          )
+              : null,
+          'priority': doc['priority'],
+          'destination': (doc['destination'] != '')
+              ? LatLng(
+            double.parse(doc['destination'].split(',')[0]),
+            double.parse(doc['destination'].split(',')[1]),
+          )
+              : null,
+          'status': doc['status'],
+        };
+      }).toList();
+    }
+    return tasksData;
+  } catch (e) {
+    throw Exception('Error fetching tasks for today: $e');
   }
-  return tasksData;
 }
 
 Future<List<Map<String, dynamic>>> getTasksByCategoryForToday(String userID, String category) async {
   final todayDate = DateTime.now();
-  String formattedDate = DateFormat('dd-MM-yyyy').format(todayDate);
+  String formattedDate = DateFormat('yyyy-MM-dd').format(todayDate);
   List<Map<String, dynamic>> tasksData = [];
 
-  final snapshot = await FirebaseFirestore.instance
-      .collection("users")
-      .doc(userID)
-      .collection("tasks")
-      .doc(formattedDate)
-      .collection("day tasks")
-      .where('category', isEqualTo: category)
-      .get();
+  try {
+    final snapshot = await _firestore
+        .collection("users")
+        .doc(userID)
+        .collection("tasks")
+        .doc(formattedDate)
+        .collection("day tasks")
+        .where('category', isEqualTo: category)
+        .get();
 
-  if (snapshot.docs.isNotEmpty) {
-    tasksData = snapshot.docs.map((doc) {
-      return {
-        'id': doc.id,
-        'title': doc['title'],
-        'description': doc['description'],
-        'category': doc['category'],
-        'date': doc['date'].toDate(),
-        'startTime': (doc['startTime'] != '')
-            ? TimeOfDay(
-          hour: int.parse(doc['startTime'].split(':')[0]),
-          minute: int.parse(doc['startTime'].split(':')[1]),
-        )
-            : null,
-        'deadline': (doc['deadline'] != '')
-            ? TimeOfDay(
-          hour: int.parse(doc['deadline'].split(':')[0]),
-          minute: int.parse(doc['deadline'].split(':')[1]),
-        )
-            : null,
-        'priority': doc['priority'],
-        'destination': (doc['destination'] != '')
-            ? LatLng(
-          double.parse(doc['destination'].split(',')[0]),
-          double.parse(doc['destination'].split(',')[1]),
-        )
-            : null,
-        'status': doc['status'],
-      };
-    }).toList();
+    if (snapshot.docs.isNotEmpty) {
+      tasksData = snapshot.docs.map((doc) {
+        return {
+          'id': doc.id,
+          'title': doc['title'],
+          'description': doc['description'],
+          'category': doc['category'],
+          'date': doc['date'].toDate(),
+          'startTime': (doc['startTime'] != '')
+              ? TimeOfDay(
+            hour: int.parse(doc['startTime'].split(':')[0]),
+            minute: int.parse(doc['startTime'].split(':')[1]),
+          )
+              : null,
+          'deadline': (doc['deadline'] != '')
+              ? TimeOfDay(
+            hour: int.parse(doc['deadline'].split(':')[0]),
+            minute: int.parse(doc['deadline'].split(':')[1]),
+          )
+              : null,
+          'priority': doc['priority'],
+          'destination': (doc['destination'] != '')
+              ? LatLng(
+            double.parse(doc['destination'].split(',')[0]),
+            double.parse(doc['destination'].split(',')[1]),
+          )
+              : null,
+          'status': doc['status'],
+        };
+      }).toList();
+    }
+    return tasksData;
+  } catch (e) {
+    throw Exception('Error fetching tasks by category for today: $e');
   }
-  return tasksData;
 }
 
 Future<void> addCategory(String name, String userID) async {
-  await FirebaseFirestore.instance.collection('users')
-      .doc(userID)
-      .collection('categories')
-      .add({
-    'name': name,
+  await _firestore.collection('users')
+    .doc(userID)
+    .collection('categories')
+    .add({
+      'name': name,
+      'tasksCount': 0,
   });
 }
 
@@ -287,16 +353,156 @@ Future<void> addInitialCategories(String userID) async {
 }
 
 Future<List<dynamic>> getCategories(String userID) async {
-  final snapshot = await FirebaseFirestore.instance.collection('users')
-      .doc(userID)
-      .collection('categories')
-      .orderBy('name')
-      .get();
+  try {
+    final snapshot = await _firestore.collection('users')
+        .doc(userID)
+        .collection('categories')
+        .orderBy('name')
+        .get();
 
-  List<dynamic> categories = snapshot.docs.map((doc) {
-    Map<String, dynamic> data = doc.data();
-    return data['name'];
-  }).toList();
+    List<dynamic> categories = snapshot.docs.map((doc) {
+      Map<String, dynamic> data = doc.data();
+      return data['name'];
+    }).toList();
 
-  return categories;
+    return categories;
+  } catch (e) {
+    throw Exception('Error fetching categories names: $e');
+  }
+}
+
+Future<int> getTotalTasksCount(String userID) async{
+  try {
+    QuerySnapshot categoriesSnapshot = await _firestore
+        .collection('users')
+        .doc(userID)
+        .collection('categories')
+        .get();
+
+    int totalTasks = 0;
+    for (var doc in categoriesSnapshot.docs) {
+      totalTasks += doc['tasksCount'] as int;
+    }
+    return totalTasks;
+  } catch (e) {
+    throw Exception('Error getting total tasks count: $e');
+  }
+}
+
+Future<List<Map<String, dynamic>>> getCategoryTaskPercentage(String userID) async {
+  try {
+    QuerySnapshot categoriesSnapshot = await _firestore
+        .collection('users')
+        .doc(userID)
+        .collection('categories')
+        .get();
+
+    int totalTasks = 0;
+    for (var doc in categoriesSnapshot.docs) {
+      totalTasks += doc['tasksCount'] as int;
+    }
+
+    List<Map<String, dynamic>> categoryTaskPercentages = [];
+    int index = 0;
+    for (var categoryDoc in categoriesSnapshot.docs) {
+      String categoryName = categoryDoc['name'];
+      int categoryTaskCount = categoryDoc['tasksCount'];
+      double categoryPercentage = totalTasks > 0 ? (categoryTaskCount / totalTasks) * 100 : 0;
+
+      categoryTaskPercentages.add({
+        'index': index,
+        'name': categoryName,
+        'percentage': categoryPercentage,
+        'color': chartColors[index],
+      });
+      index++;
+    }
+    categoryTaskPercentages.sort((a, b) => b['percentage'].compareTo(a['percentage']));
+    return categoryTaskPercentages;
+  } catch (e) {
+    throw Exception('Error fetching category task percentages: $e');
+  }
+}
+
+Future<int> getTasksCountForDay(String userID, String date) async {
+  try {
+    final dateSnapshot = await _firestore
+        .collection('users')
+        .doc(userID)
+        .collection('tasks')
+        .doc(date)
+        .get();
+
+    if (dateSnapshot.exists) {
+      int tasksCountForDay = dateSnapshot['tasksCount'];
+      return tasksCountForDay;
+    } else {
+      return 0;
+    }
+  } catch (e) {
+    throw Exception('Error fetching tasks count for day $date: $e');
+  }
+}
+
+Future<Map<String, dynamic>> getNumberOfTodoAndDoneTaskForDay(String userID, String date) async {
+  try {
+    QuerySnapshot doneTasksSnapshot = await _firestore
+        .collection('users')
+        .doc(userID)
+        .collection('tasks')
+        .doc(date)
+        .collection('day tasks')
+        .where('status', isEqualTo: 'Done')
+        .get();
+
+    int doneTasksCountForDay = doneTasksSnapshot.size;
+    int totalNumberOfTasksForDay = await getTasksCountForDay(userID, date);
+    int todoTasksCountForDay = totalNumberOfTasksForDay - doneTasksCountForDay;
+    int weekday = DateTime.parse(date).weekday;
+
+    return {
+      'To do': todoTasksCountForDay,
+      'Done': doneTasksCountForDay,
+      'Day': weekday,
+    };
+  } catch (e) {
+    throw Exception('Error fetching number of To do and Done tasks for $date: $e');
+  }
+}
+
+Future<List<Map<String, dynamic>>> getNumberOfTodoAndDoneTasksForWeek(String userID, String startOfWeek, String endOfWeek) async {
+  try {
+    final datesSnapshot = await _firestore
+        .collection('users')
+        .doc(userID)
+        .collection('tasks')
+        .where(FieldPath.documentId, isGreaterThanOrEqualTo: startOfWeek)
+        .where(FieldPath.documentId, isLessThanOrEqualTo: endOfWeek)
+        .orderBy(FieldPath.documentId)
+        .get();
+
+    List<Map<String, dynamic>> noOfTodoAndDoneTasksForWeek = [];
+    if (datesSnapshot.size > 0) {
+
+      for (var date in datesSnapshot.docs) {
+        Map<String, dynamic> noOfTodoAndDoneTasksForDay = await getNumberOfTodoAndDoneTaskForDay(userID, date.id);
+
+        noOfTodoAndDoneTasksForWeek.add(noOfTodoAndDoneTasksForDay);
+      }
+      if (noOfTodoAndDoneTasksForWeek.length < 7) {
+        for (int i = 1; i <= 7; i++) {
+          if (!noOfTodoAndDoneTasksForWeek.any((map) => map['Day'] == i)) {
+            noOfTodoAndDoneTasksForWeek.add({'To do': 0, 'Done': 0, 'Day': i});
+          }
+        }
+        noOfTodoAndDoneTasksForWeek.sort((a, b) => a['Day'].compareTo(b['Day']));
+      }
+    } else {
+      noOfTodoAndDoneTasksForWeek = List.generate(7, (index) => {'To do': 0, 'Done': 0, 'Day': index+1});
+    }
+
+    return noOfTodoAndDoneTasksForWeek;
+  } catch (e) {
+    throw Exception('Error fetching number of To do and Done tasks for week: $e');
+  }
 }

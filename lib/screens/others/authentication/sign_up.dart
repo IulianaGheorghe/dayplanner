@@ -1,11 +1,11 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../../common_widgets/navigationBar.dart';
 import '../../../common_widgets/showSnackBar.dart';
 import '../../../services/auth_methods.dart';
 import '../../../util/components.dart';
 import '../../../util/constants.dart';
-import '../../tabs/home.dart';
 import 'log_in.dart';
 
 class SignUp extends StatefulWidget{
@@ -35,7 +35,7 @@ class _SignUp extends State<SignUp> {
           context: context,
         );
         Navigator.push(context,
-            MaterialPageRoute(builder: (context) => Home()));
+            MaterialPageRoute(builder: (context) => const MyBottomNavigationBar(index: 0)));
       } catch (e) {
         throw Exception('Error creating the user: $e');
       }

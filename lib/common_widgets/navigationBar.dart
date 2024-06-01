@@ -1,29 +1,75 @@
 import 'package:dayplanner/util/constants.dart';
 import 'package:flutter/material.dart';
 
+import '../screens/others/task/tasks_list.dart';
 import '../screens/tabs/account.dart';
 import '../screens/tabs/calendar.dart';
 import '../screens/tabs/home.dart';
 
 class MyBottomNavigationBar extends StatefulWidget {
-  const MyBottomNavigationBar({super.key});
+  final int index;
+
+  const MyBottomNavigationBar({super.key, required this.index});
 
   @override
   State<MyBottomNavigationBar> createState() => _MyBottomNavigationBarState();
 }
 
 class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
-  int index = 0;
+  late int index;
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    index = widget.index;
+  }
+
+  Future<void> waitForTaskDeletion() async {
+    if (isTaskDeleting) {
+      setState(() {
+        isLoading = true;
+      });
+      await Future.delayed(const Duration(seconds: 2));
+    }
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void handleTabSelection(int selectedIndex) async{
+    if (selectedIndex == 1 || selectedIndex == 2) {
+      await waitForTaskDeletion();
+    }
+    if (mounted) {
+      setState(() {
+        index = selectedIndex;
+      });
+    }
+  }
+
   final screens = [
     const Home(),
     const Calendar(),
     const Account(),
   ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: screens[index],
+      body: Stack(
+        children: [
+          screens[index],
+          if (isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -41,8 +87,7 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
         ],
         currentIndex: index,
         selectedItemColor: primaryColor,
-        onTap: (index) =>
-            setState(() => this.index = index),
+        onTap: handleTabSelection,
       ),
     );
   }
