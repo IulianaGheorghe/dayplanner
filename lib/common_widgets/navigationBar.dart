@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../screens/others/task/tasks_list.dart';
 import '../screens/tabs/account.dart';
 import '../screens/tabs/calendar.dart';
+import '../screens/tabs/friends.dart';
 import '../screens/tabs/home.dart';
 
 class MyBottomNavigationBar extends StatefulWidget {
@@ -40,7 +41,7 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
   }
 
   void handleTabSelection(int selectedIndex) async{
-    if (selectedIndex == 1 || selectedIndex == 2) {
+    if (selectedIndex == 1 || selectedIndex == 3) {
       await waitForTaskDeletion();
     }
     if (mounted) {
@@ -53,6 +54,7 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
   final screens = [
     const Home(),
     const Calendar(),
+    const Friends(),
     const Account(),
   ];
   @override
@@ -81,12 +83,19 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
             label: 'Calendar',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.group),
+            label: 'Friends',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'You',
           ),
         ],
         currentIndex: index,
         selectedItemColor: primaryColor,
+        unselectedItemColor: Colors.grey.shade600,
+        showUnselectedLabels: true,
+        unselectedLabelStyle: TextStyle(color: Colors.grey.shade600),
         onTap: handleTabSelection,
       ),
     );

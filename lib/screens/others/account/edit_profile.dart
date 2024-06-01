@@ -116,7 +116,7 @@ class _EditProfileState extends State<EditProfile>{
       Navigator.pop(context);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const MyBottomNavigationBar(index: 2)),
+        MaterialPageRoute(builder: (context) => const MyBottomNavigationBar(index: 3)),
       );
     } catch (e) {
       throw Exception('Error updating account details: $e');

@@ -12,6 +12,7 @@ const inputDecorationColor = primaryColor;
 const newTaskColor = Color(0xff52BF96);
 const green = Color(0xff18ee25);
 const profilePageColor = Color(0xff289EC6);
+const friendsPageColor = Color(0xffA6ECF4);
 
 // 0xff7c6b81
 // 0xffb603cc
