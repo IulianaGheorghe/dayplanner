@@ -1,3 +1,4 @@
+import 'package:dayplanner/common_widgets/showSnackBar.dart';
 import 'package:dayplanner/util/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -45,9 +46,10 @@ class _FriendsState extends State<Friends> {
           title: const Text(
             'Friends',
             style: TextStyle(
-                fontFamily: font1,
-                fontSize: 23,
-                color: Colors.black),
+              fontFamily: font1,
+              fontSize: 23,
+              color: Colors.black,
+            ),
           ),
         ),
         body: Stack(
@@ -85,6 +87,7 @@ class _FriendsState extends State<Friends> {
       itemBuilder: (context, index) {
         final friend = friendsDetails[index];
         return Column(children: [
+          const SizedBox(height: 30),
           Dismissible(
             key: UniqueKey(),
             direction: DismissDirection.endToStart,
@@ -101,6 +104,60 @@ class _FriendsState extends State<Friends> {
                 ),
               ),
             ),
+            confirmDismiss: (direction) async {
+              return await showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text(
+                      "Confirm Deletion",
+                      style: TextStyle(
+                        fontFamily: font1
+                      ),
+                    ),
+                    content: const Wrap(
+                      children: [
+                        Text(
+                          "Are you sure you want to delete this friend?",
+                          style: TextStyle(
+                            fontSize: 18
+                          ),
+                        ),
+                        Text(
+                          "He won't be able to see your progress either.",
+                          style: TextStyle(
+                            fontSize: 17,
+                            color: Colors.grey
+                          ),
+                        ),
+                      ],
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () =>
+                            Navigator.of(context).pop(false),
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(
+                            color: primaryColor
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () =>
+                            Navigator.of(context).pop(true),
+                        child: const Text(
+                          "Delete",
+                          style: TextStyle(
+                              color: primaryColor
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
             onDismissed: (direction) async {
               setState(() {
                 friendsDetails.removeAt(index);
@@ -118,10 +175,10 @@ class _FriendsState extends State<Friends> {
               child: Container(
                 alignment: Alignment.center,
                 margin: const EdgeInsets.all(15),
-                height: 150,
+                height: 125,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: primaryColor,
+                  color: Colors.cyan.shade700,
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
@@ -134,22 +191,24 @@ class _FriendsState extends State<Friends> {
                 ),
                 child: Row(
                   children: [
+                    const SizedBox(width: 30),
                     Padding(
-                      padding: const EdgeInsets.all(10.0),
+                      padding: const EdgeInsets.only(top: 10, bottom: 10),
                       child: CircleAvatar(
-                        radius: 60,
+                        radius: 50,
                         backgroundImage: (friend['photo'] == '')
                             ? const AssetImage('assets/images/user.png')
                         as ImageProvider
                             : NetworkImage(friend['photo']!),
                       ),
                     ),
+                    const SizedBox(width: 20),
                     Text(
                       friend['name']!,
                       style: const TextStyle(
                         color: buttonTextColor,
-                        fontSize: questionSize,
-                        fontFamily: font2,
+                        fontSize: 30,
+                        fontFamily: font1,
                       ),
                     ),
                   ],
@@ -243,7 +302,8 @@ class _FriendsState extends State<Friends> {
                         localErrorMessage = 'The ID is not valid.';
                       });
                     } else {
-                      userServices.addFriend(friendId);
+                      await userServices.addFriend(friendId);
+                      showSnackBar(context, "Friend added successfully");
                       setState(() {
                         localErrorMessage = null;
                       });

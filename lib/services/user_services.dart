@@ -218,19 +218,32 @@ class UserServices{
 
   Future<void> deleteFriend(String friendUID) async {
     User? currentUser = _auth.currentUser;
-
     try {
-      await _firestore.collection("users")
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('users')
           .doc(currentUser!.uid)
-          .collection("friends")
-          .doc(friendUID)
-          .delete();
+          .collection('friends')
+          .where('id', isEqualTo: friendUID)
+          .get();
 
-      await _firestore.collection("users")
+      if (querySnapshot.docs.isNotEmpty) {
+        for (var doc in querySnapshot.docs) {
+          await doc.reference.delete();
+        }
+      }
+
+      QuerySnapshot querySnapshot2 = await _firestore
+          .collection('users')
           .doc(friendUID)
           .collection("friends")
-          .doc(currentUser.uid)
-          .delete();
+          .where('id', isEqualTo: currentUser.uid)
+          .get();
+
+      if (querySnapshot2.docs.isNotEmpty) {
+        for (var doc in querySnapshot2.docs) {
+          await doc.reference.delete();
+        }
+      }
     } catch (e) {
       throw Exception('Error deleting friend: $e');
     }
