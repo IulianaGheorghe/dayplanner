@@ -1,6 +1,7 @@
 import 'package:dayplanner/util/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../services/task_services.dart';
@@ -18,6 +19,7 @@ class _CalendarState extends State<Calendar>{
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
   CalendarFormat _calendarFormat = CalendarFormat.month;
+  Map<String, int> _tasksCount = {};
 
   @override
   void initState() {
@@ -25,6 +27,14 @@ class _CalendarState extends State<Calendar>{
 
     User? user = FirebaseAuth.instance.currentUser;
     userID = user!.uid;
+    _updateTasksCount(_focusedDay);
+  }
+
+  Future<void> _updateTasksCount(DateTime dateTime) async {
+    Map<String, int> tasksCount = await getTasksCountForMonth(dateTime, userID);
+    setState(() {
+      _tasksCount = tasksCount;
+    });
   }
 
   @override
@@ -58,6 +68,23 @@ class _CalendarState extends State<Calendar>{
                                 _focusedDay = focusedDay;
                               });
                             },
+                            onPageChanged: (focusedDay) {
+                              int selectedMonth = focusedDay.month;
+                              int currentMonth = DateTime.now().month;
+                              if (selectedMonth != currentMonth) {
+                                setState(() {
+                                  _selectedDay = DateTime(focusedDay.year, focusedDay.month, 1);
+                                  _focusedDay = focusedDay;
+                                  _updateTasksCount(_focusedDay);
+                                });
+                              } else {
+                                setState(() {
+                                  _selectedDay = DateTime.now();
+                                  _focusedDay = focusedDay;
+                                  _updateTasksCount(_focusedDay);
+                                });
+                              }
+                            },
                             calendarStyle: CalendarStyle(
                               todayDecoration: BoxDecoration(
                                 color: Colors.yellow.shade600,
@@ -86,6 +113,38 @@ class _CalendarState extends State<Calendar>{
                                 });
                               }
                             },
+                            calendarBuilders: CalendarBuilders(
+                              markerBuilder: (context, date, events) {
+                                String dateString = DateFormat('dd-MM-yyyy').format(date);
+                                final tasksCount = _tasksCount[dateString];
+                                if (tasksCount != null) {
+                                  return Positioned(
+                                    right: 1,
+                                    top: -6,
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.lightBlue,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      width: 18,
+                                      height: 18,
+                                      child: Center(
+                                        child: Text(
+                                          '$tasksCount',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  return null;
+                                }
+                              },
+                            ),
                           ),
                         ),
                       ),

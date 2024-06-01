@@ -31,23 +31,22 @@ class _TasksListState extends State<TasksList> {
   }
 
   void handleTasksData() async {
-    final now = DateTime.now();
-    final startOfToday = DateTime(now.year, now.month, now.day);
-    final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+    final todayDate = DateTime.now();
+    String formattedDate = DateFormat('dd-MM-yyyy').format(todayDate);
 
     final snapshot = await FirebaseFirestore.instance
         .collection("users")
         .doc(userID)
         .collection("tasks")
-        .where('date', isGreaterThanOrEqualTo: startOfToday.millisecondsSinceEpoch)
-        .where('date', isLessThanOrEqualTo: endOfToday.millisecondsSinceEpoch)
+        .doc(formattedDate)
+        .collection("day tasks")
         .get();
 
     if (snapshot.docs.isNotEmpty) {
       tasksList = snapshot.docs.map((doc) {
         String title = doc['title'];
         String description = doc['description'];
-        DateTime date = DateTime.fromMillisecondsSinceEpoch(doc['date']);
+        DateTime date = doc['date'].toDate();
         TimeOfDay? startTime = (doc['startTime'] != '') ?
           TimeOfDay(hour: int.parse(doc['startTime'].split(':')[0]),
                     minute: int.parse(doc['startTime'].split(':')[1]),
@@ -85,6 +84,8 @@ class _TasksListState extends State<TasksList> {
                 .collection("users")
                 .doc(userID)
                 .collection("tasks")
+                .doc(formattedDate)
+                .collection("day tasks")
                 .doc(doc.id)
                 .delete();
             setState(() {});
