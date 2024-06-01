@@ -6,6 +6,7 @@ import 'package:dayplanner/services/task_services.dart';
 import 'package:dayplanner/services/user_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../../common_widgets/indicator.dart';
@@ -25,6 +26,7 @@ class _AccountState extends State<Account>{
   String userID = '';
   String userName = "";
   String userEmail = "";
+  String userIdField = '';
   String userPhoto = "";
   File? _imageFile;
   List _categories = [];
@@ -58,6 +60,7 @@ class _AccountState extends State<Account>{
     fetchDetails = userServices.getUserDetails();
     Map<String, String> userDetails = await userServices.getUserDetails();
     setState(() {
+      userIdField = userDetails['userIdField']!;
       userName = userDetails['userName']!;
       userEmail = userDetails['userEmail']!;
       userPhoto = userDetails['userPhoto']!;
@@ -173,12 +176,39 @@ class _AccountState extends State<Account>{
       userPhoto = 'photo';
     }
 
+    void copyToClipboard() {
+      Clipboard.setData(ClipboardData(text: userIdField));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ID copied to clipboard')),
+      );
+    }
+
     return Container(
-      height: 300,
-      width: MediaQuery.of(context).size.width / 2,
+      height: 325,
+      width: MediaQuery.of(context).size.width / 1.25,
       padding: const EdgeInsets.only(left: 16, bottom: 10, right: 16),
       child: ListView(
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Center(
+                child: Text(
+                  "ID: $userIdField",
+                  style: const TextStyle(
+                    fontFamily: font1,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon:  Icon(Icons.copy, color: Colors.grey.shade600,),
+                onPressed: copyToClipboard,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
           Center(
             child: Stack(
               children: [
@@ -236,7 +266,6 @@ class _AccountState extends State<Account>{
               ),
             ),
           ),
-          const SizedBox(height: 5),
           Center(
             child: Text(
               userEmail,

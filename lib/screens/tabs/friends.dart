@@ -80,27 +80,27 @@ class _FriendsState extends State<Friends>{
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Add ID'),
+          title: const Text('Add friend ID'),
           content: TextField(
             controller: idController,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: 'Enter ID'),
+            decoration: const InputDecoration(labelText: 'Enter ID'),
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
                 String id = idController.text;
-                // Poți face ce vrei cu ID-ul aici, de exemplu, îl poți trimite către o altă funcție
+
                 print('ID entered: $id');
                 Navigator.of(context).pop();
               },
-              child: Text('Add'),
+              child: const Text('Add'),
             ),
           ],
         );

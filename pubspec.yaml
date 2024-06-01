@@ -51,6 +51,7 @@ dependencies:
 
   table_calendar: ^3.0.9
   uuid: ^4.4.0
+  nanoid: ^1.0.0
   image_picker: ^1.1.1
   fluttertoast: ^8.2.5
   fl_chart: ^0.68.0

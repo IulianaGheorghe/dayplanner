@@ -77,13 +77,29 @@ class UserServices{
     }
   }
 
+  Future<String> getIdFieldForUser(String userID) async {
+    try {
+      DocumentSnapshot userSnapshot = await _firestore
+          .collection('users')
+          .doc(userID)
+          .get();
+
+      String idField = userSnapshot.get('id');
+      return idField;
+    } catch (e) {
+      throw Exception('Error getting id field for user $userID: $e');
+    }
+  }
+
   Future<Map<String, String>> getUserDetails() async {
     User? user = _auth.currentUser;
     String? email = user?.email;
     if (email != null) {
+      String userIdField = await getIdFieldForUser(user!.uid);
       String name = await getName(email) ;
       String photo = await getPhoto(email);
       return {
+        'userIdField': userIdField,
         'userName': name,
         'userEmail': email,
         'userPhoto': photo,
