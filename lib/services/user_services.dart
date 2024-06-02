@@ -114,15 +114,17 @@ class UserServices{
   }
 
   Future<bool> isFriendIdValid(String friendID) async {
+    User? currentUser = _auth.currentUser;
     try {
       QuerySnapshot friendSnapshot = await _firestore
         .collection('users')
         .where('id', isEqualTo: friendID)
         .limit(1)
         .get();
-      return friendSnapshot.size > 0
-        ? true
-        : false;
+      if (friendSnapshot.size > 0 && friendSnapshot.docs.first.id != currentUser?.uid) {
+        return true;
+      }
+      return false;
     } catch (e) {
       throw Exception('Error checking friendID: $e');
     }
