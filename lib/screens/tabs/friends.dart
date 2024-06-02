@@ -16,6 +16,7 @@ class _FriendsState extends State<Friends> {
   String userID = '';
   List<Map<String, String>> friendsDetails = [];
   UserServices userServices = UserServices();
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -28,8 +29,15 @@ class _FriendsState extends State<Friends> {
   }
 
   void getFriendsDetails() async {
+    setState(() {
+      isLoading = true;
+    });
+
     friendsDetails = await userServices.getFriends();
-    setState(() {}); // Trigger UI update after fetching friends
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   Future<bool> _isValidID(String id) async {
@@ -59,7 +67,13 @@ class _FriendsState extends State<Friends> {
               'assets/images/t3.jpg',
               fit: BoxFit.cover,
             ),
-            _friendsListWidget(),
+            isLoading
+              ? const Center(
+                child: CircularProgressIndicator(
+                  valueColor:AlwaysStoppedAnimation<Color>(profilePageColor),
+                ),
+              )
+              : _friendsListWidget(),
           ],
         ),
         floatingActionButton: FloatingActionButton(
@@ -162,6 +176,7 @@ class _FriendsState extends State<Friends> {
               setState(() {
                 friendsDetails.removeAt(index);
               });
+              showSnackBar(context, "Friend successfully deleted");
               await userServices.deleteFriend(friend['uid']!);
             },
             child: GestureDetector(
@@ -303,7 +318,7 @@ class _FriendsState extends State<Friends> {
                       });
                     } else {
                       await userServices.addFriend(friendId);
-                      showSnackBar(context, "Friend added successfully");
+                      showSnackBar(context, "Friend successfully added");
                       setState(() {
                         localErrorMessage = null;
                       });
