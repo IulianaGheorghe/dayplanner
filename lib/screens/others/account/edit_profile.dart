@@ -21,6 +21,7 @@ class EditProfile extends StatefulWidget{
 }
 
 class _EditProfileState extends State<EditProfile>{
+  String currentUserID = '';
   String userName = "";
   String userEmail = "";
   String userPassword = "";
@@ -37,6 +38,9 @@ class _EditProfileState extends State<EditProfile>{
   @override
   void initState() {
     super.initState();
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    currentUserID = currentUser!.uid;
+
     _getUserDetails();
     _loadProfileImage();
   }
@@ -50,8 +54,8 @@ class _EditProfileState extends State<EditProfile>{
   }
 
   void _getUserDetails() async {
-    fetchDetails = userServices.getUserDetails();
-    Map<String, String> userDetails = await userServices.getUserDetails();
+    fetchDetails = userServices.getUserDetails(currentUserID);
+    Map<String, String> userDetails = await userServices.getUserDetails(currentUserID);
     setState(() {
       userName = userDetails['userName']!;
       userEmail = userDetails['userEmail']!;

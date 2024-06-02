@@ -15,42 +15,27 @@ class UserServices{
     return userID;
   }
 
-  Future<String> getName(String email) async {
-    User? user = _auth.currentUser;
-    if (user == null) {
-      throw Exception('User does not exist!');
-    }
+  Future<Map<String, String>> getNameEmailPhoto(String userID) async {
     DocumentSnapshot userSnapshot = await _firestore
         .collection('users')
-        .doc(user.uid)
+        .doc(userID)
         .get();
 
     String name;
-    if (userSnapshot.exists) {
-      name = userSnapshot.get('name');
-    } else {
-      throw Exception('User does not exist');
-    }
-    return name;
-  }
-
-  Future<String> getPhoto(String email) async {
-    User? user = _auth.currentUser;
-    if (user == null) {
-      throw Exception('User does not exist!');
-    }
-    DocumentSnapshot userSnapshot = await _firestore
-        .collection('users')
-        .doc(user.uid)
-        .get();
-
+    String email;
     String photo;
     if (userSnapshot.exists) {
+      name = userSnapshot.get('name');
+      email = userSnapshot.get('email');
       photo = userSnapshot.get('photo');
     } else {
       throw Exception('User does not exist');
     }
-    return photo;
+    return {
+      'name': name,
+      'email': email,
+      'photo': photo,
+    };
   }
 
   Future<void> updatePhotoURL(String userId, String newPhotoURL) async {
@@ -91,21 +76,23 @@ class UserServices{
     }
   }
 
-  Future<Map<String, String>> getUserDetails() async {
-    User? user = _auth.currentUser;
-    String? email = user?.email;
-    if (email != null) {
-      String userIdField = await getIdFieldForUser(user!.uid);
-      String name = await getName(email) ;
-      String photo = await getPhoto(email);
+  Future<Map<String, String>> getUserDetails(String userID) async {
+    try {
+      Map<String, String> nameEmailPhoto = await getNameEmailPhoto(userID);
+      String name = nameEmailPhoto['name']!;
+      String email = nameEmailPhoto['email']!;
+      String photo = nameEmailPhoto['photo']!;
+      String userIdField = await getIdFieldForUser(userID);
+
       return {
         'userIdField': userIdField,
         'userName': name,
         'userEmail': email,
         'userPhoto': photo,
       };
+    } catch (e) {
+      throw Exception('Error getting details for user $userID: $e');
     }
-    return {};
   }
 
   Future<void> updateProfileDetails(File? imageFile, String userPhoto, String userPassword, String userName) async {

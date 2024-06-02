@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dayplanner/screens/others/task/tasks_list.dart';
 import 'package:dayplanner/services/task_services.dart';
 import 'package:dayplanner/services/user_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,7 +15,8 @@ import '../others/account/edit_profile.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class Account extends StatefulWidget{
-  const Account({super.key});
+  final String userID;
+  const Account({super.key, required this.userID});
 
   @override
   State<Account> createState() => _AccountState();
@@ -24,6 +24,7 @@ class Account extends StatefulWidget{
 
 class _AccountState extends State<Account>{
   String userID = '';
+  String currentUserID = '';
   String userName = "";
   String userEmail = "";
   String userIdField = '';
@@ -44,11 +45,9 @@ class _AccountState extends State<Account>{
   @override
   void initState() {
     super.initState();
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw Exception('User does not exist!');
-    }
-    userID = user.uid;
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    currentUserID = currentUser!.uid;
+    userID = widget.userID;
 
     _getUserDetails();
     _tooltipBehavior = TooltipBehavior(enable: true);
@@ -57,8 +56,8 @@ class _AccountState extends State<Account>{
   }
 
   void _getUserDetails() async {
-    fetchDetails = userServices.getUserDetails();
-    Map<String, String> userDetails = await userServices.getUserDetails();
+    fetchDetails = userServices.getUserDetails(userID);
+    Map<String, String> userDetails = await userServices.getUserDetails(userID);
     setState(() {
       userIdField = userDetails['userIdField']!;
       userName = userDetails['userName']!;
@@ -85,8 +84,11 @@ class _AccountState extends State<Account>{
 
   @override
   Widget build(BuildContext context) {
-    if (isTaskDeleting) {
-
+    bool isCurrentUserProfile;
+    if (userID == currentUserID) {
+      isCurrentUserProfile = true;
+    } else {
+      isCurrentUserProfile = false;
     }
     return MaterialApp(
       theme: ThemeData(
@@ -95,29 +97,39 @@ class _AccountState extends State<Account>{
         ),
       ),
       home: Scaffold(
-        appBar: AppBar(
+        appBar: isCurrentUserProfile
+        ? AppBar(
+            backgroundColor: profilePageColor,
+            actions: [
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'Edit profile') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const EditProfile()),
+                    );
+                  }
+                },
+                itemBuilder: (BuildContext context) {
+                  return [
+                    const PopupMenuItem<String>(
+                      value: 'Edit profile',
+                      child: Text('Edit profile')
+                    ),
+                  ];
+                },
+                icon: const Icon(Icons.more_vert),
+              ),
+            ],
+          )
+        : AppBar(
+          leading: BackButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            color: Colors.black,
+          ),
           backgroundColor: profilePageColor,
-          actions: [
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'Edit profile') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const EditProfile()),
-                  );
-                }
-              },
-              itemBuilder: (BuildContext context) {
-                return [
-                  const PopupMenuItem<String>(
-                    value: 'Edit profile',
-                    child: Text('Edit profile')
-                  ),
-                ];
-              },
-              icon: const Icon(Icons.more_vert),
-            ),
-          ],
         ),
         body: Stack(
           fit: StackFit.expand,
@@ -144,7 +156,7 @@ class _AccountState extends State<Account>{
                         return SingleChildScrollView(
                           child: Column(
                               children: [
-                                buildProfile(),
+                                buildProfile(isCurrentUserProfile),
                                 buildBarChart(),
                                 const SizedBox(height: 20),
                                 buildPieChart(),
@@ -166,7 +178,7 @@ class _AccountState extends State<Account>{
     );
   }
 
-  Widget buildProfile(){
+  Widget buildProfile(bool isCurrentUserProfile){
     ImageProvider<Object> imageShowed;
     if(_imageFile == null)
     {
@@ -184,12 +196,13 @@ class _AccountState extends State<Account>{
     }
 
     return Container(
-      height: 325,
+      height: isCurrentUserProfile ? 325 : 285,
       width: MediaQuery.of(context).size.width / 1.25,
       padding: const EdgeInsets.only(left: 16, bottom: 10, right: 16),
       child: ListView(
         children: [
-          Row(
+          isCurrentUserProfile
+          ? Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -207,7 +220,8 @@ class _AccountState extends State<Account>{
                 onPressed: copyToClipboard,
               ),
             ],
-          ),
+          )
+          : Container(),
           const SizedBox(height: 10),
           Center(
             child: Stack(

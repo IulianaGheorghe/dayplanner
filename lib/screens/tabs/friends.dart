@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../services/user_services.dart';
+import 'account.dart';
 
 class Friends extends StatefulWidget {
   const Friends({super.key});
@@ -64,7 +65,7 @@ class _FriendsState extends State<Friends> {
           fit: StackFit.expand,
           children: [
             Image.asset(
-              'assets/images/t3.jpg',
+              'assets/images/b2.png',
               fit: BoxFit.cover,
             ),
             isLoading
@@ -181,12 +182,11 @@ class _FriendsState extends State<Friends> {
             },
             child: GestureDetector(
               onTap: () {
-                // Navigator.push(context, MaterialPageRoute(
-                //   builder: (context) =>
-                //
-                // ),
-                // );
-              },
+                Navigator.pushReplacement(
+                  context,
+                    MaterialPageRoute(builder: (context) => Account(userID: friend['uid']!)),
+                  );
+                },
               child: Container(
                 alignment: Alignment.center,
                 margin: const EdgeInsets.all(15),

@@ -1,4 +1,5 @@
 import 'package:dayplanner/util/constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../screens/others/task/tasks_list.dart';
@@ -17,12 +18,15 @@ class MyBottomNavigationBar extends StatefulWidget {
 }
 
 class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
+  String userID = '';
   late int index;
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    userID = currentUser!.uid;
     index = widget.index;
   }
 
@@ -51,14 +55,15 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
     }
   }
 
-  final screens = [
-    const Home(),
-    const Calendar(),
-    const Friends(),
-    const Account(),
-  ];
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      const Home(),
+      const Calendar(),
+      const Friends(),
+      Account(userID: userID),
+    ];
+
     return Scaffold(
       body: Stack(
         children: [
