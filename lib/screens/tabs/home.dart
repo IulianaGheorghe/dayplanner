@@ -1,3 +1,4 @@
+import 'package:dayplanner/common_widgets/showDialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -16,7 +17,7 @@ class Home extends StatefulWidget{
 
 class _HomeState extends State<Home>{
   String userID = '';
-  List _categoriesList = ['All'];
+  List<String> _categoriesList = ['All'];
   String _selectedCategory = "All";
 
   @override
@@ -30,7 +31,8 @@ class _HomeState extends State<Home>{
   }
 
   void _handleCategories() async {
-    final categories = await getCategories(userID);
+    List<String> categories = await getCategories(userID);
+    _categoriesList = ['All'];
     setState(() {
       _categoriesList += categories;
     });
@@ -178,7 +180,7 @@ class _HomeState extends State<Home>{
                                   if (value == 'Add category') {
                                     _showAddCategoryDialog(context);
                                   } else if (value == 'Delete category') {
-
+                                    _showDeleteCategoryDialog();
                                   }
                                 },
                                 itemBuilder: (BuildContext context) {
@@ -232,6 +234,125 @@ class _HomeState extends State<Home>{
           ],
         ),
       ),
+    );
+  }
+
+  void _showAddCategoryDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ShowDialog(
+          title: 'Add new category',
+          inputText: 'Enter category name',
+          buttonText: 'Submit',
+          onPressedFunction: (String controllerText, void Function(String?) setError) async {
+            bool categoryExists = await categoryAlreadyExists(controllerText, userID);
+            if (categoryExists) {
+              setError('This category already exists');
+            } else {
+              await addCategory(controllerText, userID);
+              Navigator.of(context).pop();
+              showSnackBar(context, "Category successfully added");
+              setError(null);
+              _handleCategories();
+            }
+          },
+        );
+      },
+    );
+  }
+
+  void _showDeleteCategoryDialog() {
+    Map<String, bool> selectedCategories = {for (var category in _categoriesList) category: false};
+    String? errorMessage;
+
+    Future<void> deleteSelectedCategories() async {
+      List<String> categoriesToDelete = selectedCategories.entries
+          .where((entry) => entry.value)
+          .map((entry) => entry.key)
+          .toList();
+
+      for (String category in categoriesToDelete) {
+        await deleteCategory(category, userID);
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: const Text(
+                'Delete Categories',
+                style: TextStyle(
+                  fontFamily: font1
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ..._categoriesList.map((String category) {
+                      return CheckboxListTile(
+                        title: Text(category),
+                        value: selectedCategories[category],
+                        onChanged: (bool? value) {
+                          setState(() {
+                            selectedCategories[category] = value ?? false;
+                            errorMessage = null;
+                          });
+                        },
+                      );
+                    }),
+                    if (errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          errorMessage!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: primaryColor
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    if (selectedCategories.values.every((isSelected) => !isSelected)) {
+                      setState(() {
+                        errorMessage = 'Please select at least one category to delete.';
+                      });
+                    } else {
+                      await deleteSelectedCategories();
+                      _handleCategories();
+                      Navigator.of(context).pop();
+                      showSnackBar(context, "Categories successfully deleted");
+                    }
+                  },
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(
+                        color: primaryColor
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
