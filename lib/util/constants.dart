@@ -18,36 +18,36 @@ const friendsPageColor = Color(0xffFEC49E);
 // 0xffb603cc
 
 List<Color> chartColors = const [
-  Color(0xFF1F77B4), // Blue
-  Color(0xFFFF7F0E), // Orange
-  Color(0xFF2CA02C), // Green
-  Color(0xFFD62728), // Red
-  Color(0xFF9467BD), // Purple
-  Color(0xFF8C564B), // Brown
-  Color(0xFFE377C2), // Pink
-  Color(0xFF7F7F7F), // Gray
-  Color(0xFFBCBD22), // Olive
-  Color(0xFF17BECF), // Teal
-  Color(0xFFAEC7E8), // Light Blue
-  Color(0xFFFFBB78), // Light Orange
-  Color(0xFF98DF8A), // Light Green
-  Color(0xFFFF9896), // Light Red
-  Color(0xFFC5B0D5), // Light Purple
-  Color(0xFFC49C94), // Light Brown
-  Color(0xFFF7B6D2), // Light Pink
-  Color(0xFFC7C7C7), // Light Gray
-  Color(0xFFDBDB8D), // Light Olive
-  Color(0xFF9EDAE5), // Light Teal
-  Color(0xFF393B79), // Dark Blue
-  Color(0xFF637939), // Dark Green
-  Color(0xFF8C6D31), // Dark Orange
-  Color(0xFF843C39), // Dark Red
-  Color(0xFF7B4173), // Dark Purple
-  Color(0xFFA55194), // Dark Pink
-  Color(0xFF5254A3), // Dark Blue-Purple
-  Color(0xFF8CA252), // Dark Olive Green
-  Color(0xFFBD9E39), // Dark Yellow-Brown
-  Color(0xFFAD494A), // Dark Red-Brown
+  Color(0xFF1F77B4),
+  Color(0xFFFF7F0E),
+  Color(0xFF2CA02C),
+  Color(0xFFD62728),
+  Color(0xFF9467BD),
+  Color(0xFF8C564B),
+  Color(0xFFE377C2),
+  Color(0xFF7F7F7F),
+  Color(0xFFBCBD22),
+  Color(0xFF17BECF),
+  Color(0xFFAEC7E8),
+  Color(0xFFFFBB78),
+  Color(0xFF98DF8A),
+  Color(0xFFFF9896),
+  Color(0xFFC5B0D5),
+  Color(0xFFC49C94),
+  Color(0xFFF7B6D2),
+  Color(0xFFC7C7C7),
+  Color(0xFFDBDB8D),
+  Color(0xFF9EDAE5),
+  Color(0xFF393B79),
+  Color(0xFF637939),
+  Color(0xFF8C6D31),
+  Color(0xFF843C39),
+  Color(0xFF7B4173),
+  Color(0xFFA55194),
+  Color(0xFF5254A3),
+  Color(0xFF8CA252),
+  Color(0xFFBD9E39),
+  Color(0xFFAD494A),
 ];
 
 // App sizing

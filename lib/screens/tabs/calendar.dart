@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../services/task_services.dart';
+import '../others/task/tasks_list.dart';
 
 class Calendar extends StatefulWidget{
   const Calendar({super.key});
@@ -17,6 +18,7 @@ class _CalendarState extends State<Calendar>{
 
   String userID = '';
   DateTime _selectedDay = DateTime.now();
+  String formattedSelectedDate = '';
   DateTime _focusedDay = DateTime.now();
   CalendarFormat _calendarFormat = CalendarFormat.month;
   Map<String, int> _tasksCount = {};
@@ -117,7 +119,7 @@ class _CalendarState extends State<Calendar>{
                               markerBuilder: (context, date, events) {
                                 String dateString = DateFormat('yyyy-MM-dd').format(date);
                                 final tasksCount = _tasksCount[dateString];
-                                if (tasksCount != null) {
+                                if (tasksCount != null && tasksCount != 0) {
                                   return Positioned(
                                     right: 1,
                                     top: -6,
@@ -148,29 +150,8 @@ class _CalendarState extends State<Calendar>{
                           ),
                         ),
                       ),
-                      Expanded(
-                        child: FutureBuilder<List<Task>>(
-                          future: getTasksForDay(_selectedDay, userID),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
-                            } else if (snapshot.hasError) {
-                              return Center(child: Text('Error: ${snapshot.error}'));
-                            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                              return const Center(child: Text(
-                                'There are no tasks for this day.',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20
-                                ),
-                              ));
-                            } else {
-                              return buildTasksList(snapshot.data!);
-                            }
-                          },
-                        ),
-                      )
+                      buildTasksList(),
+                      const SizedBox(height: 60,)
                     ],
                   ),
                 ),
@@ -181,33 +162,13 @@ class _CalendarState extends State<Calendar>{
     );
   }
 
-  Widget buildTasksList(List<Task> tasks) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: tasks.map((task) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: ListTile(
-              title: Text(task.title),
-              subtitle: Text(task.description),
-            ),
-          );
-        }).toList(),
+  Widget buildTasksList() {
+    formattedSelectedDate = DateFormat('yyyy-MM-dd').format(_selectedDay);
+
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.only(right: 25, left: 25),
+        child: TasksList(category:  'All', sortingType: 'Sort by Priority', date: formattedSelectedDate, onCalendarPage: true,),
       ),
     );
   }

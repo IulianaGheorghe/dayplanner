@@ -19,6 +19,7 @@ class _HomeState extends State<Home>{
   String userID = '';
   List<String> _categoriesList = ['All'];
   String _selectedCategory = "All";
+  String formattedDateForToday = '';
 
   @override
   void initState() {
@@ -26,6 +27,9 @@ class _HomeState extends State<Home>{
 
     User? user = FirebaseAuth.instance.currentUser;
     userID = user!.uid;
+
+    final todayDate = DateTime.now();
+    formattedDateForToday = DateFormat('yyyy-MM-dd').format(todayDate);
 
     _handleCategories();
   }
@@ -269,7 +273,7 @@ class _HomeState extends State<Home>{
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(right: 10),
-                      child: TasksList(category: _selectedCategory, sortingType: _selectedSortingType),
+                      child: TasksList(category: _selectedCategory, sortingType: _selectedSortingType, date: formattedDateForToday, onCalendarPage: false,),
                     ),
                   ),
                 ],

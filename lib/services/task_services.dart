@@ -224,9 +224,7 @@ Future<void> updateStatus(String userID, String task, String formattedDate, Stri
       .update({'status': status});
 }
 
-Future<List<Map<String, dynamic>>> getAllTasksForToday(String userID) async {
-  final todayDate = DateTime.now();
-  String formattedDate = DateFormat('yyyy-MM-dd').format(todayDate);
+Future<List<Map<String, dynamic>>> getAllTasks(String userID, String date) async {
   List<Map<String, dynamic>> tasksData = [];
 
   try {
@@ -234,7 +232,7 @@ Future<List<Map<String, dynamic>>> getAllTasksForToday(String userID) async {
         .collection("users")
         .doc(userID)
         .collection("tasks")
-        .doc(formattedDate)
+        .doc(date)
         .collection("day tasks")
         .get();
 
@@ -275,9 +273,7 @@ Future<List<Map<String, dynamic>>> getAllTasksForToday(String userID) async {
   }
 }
 
-Future<List<Map<String, dynamic>>> getTasksByCategoryForToday(String userID, String category) async {
-  final todayDate = DateTime.now();
-  String formattedDate = DateFormat('yyyy-MM-dd').format(todayDate);
+Future<List<Map<String, dynamic>>> getTasksByCategory(String userID, String category, String date) async {
   List<Map<String, dynamic>> tasksData = [];
 
   try {
@@ -285,7 +281,7 @@ Future<List<Map<String, dynamic>>> getTasksByCategoryForToday(String userID, Str
         .collection("users")
         .doc(userID)
         .collection("tasks")
-        .doc(formattedDate)
+        .doc(date)
         .collection("day tasks")
         .where('category', isEqualTo: category)
         .get();

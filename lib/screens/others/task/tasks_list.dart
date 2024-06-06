@@ -12,7 +12,9 @@ bool isTaskDeleting = false;
 class TasksList extends StatefulWidget {
   final String category;
   final String sortingType;
-  const TasksList({super.key, required this.category, required this.sortingType});
+  final String date;
+  final bool onCalendarPage;
+  const TasksList({super.key, required this.category, required this.sortingType, required this.date, required this.onCalendarPage});
 
   @override
   State<TasksList> createState() => _TasksListState();
@@ -31,6 +33,9 @@ class _TasksListState extends State<TasksList> {
     if (oldWidget.sortingType != widget.sortingType) {
       _sortTasks();
     }
+    if (oldWidget.date != widget.date) {
+      handleTasksData();
+    }
   }
 
   @override
@@ -46,8 +51,8 @@ class _TasksListState extends State<TasksList> {
   void handleTasksData() async {
     List<Map<String, dynamic>> tasks;
     widget.category == "All"
-      ? tasks = await getAllTasksForToday(userID!)
-      : tasks = await getTasksByCategoryForToday(userID!, widget.category);
+      ? tasks = await getAllTasks(userID!, widget.date)
+      : tasks = await getTasksByCategory(userID!, widget.category, widget.date);
     if (mounted) {
       setState(() {
         tasksData = tasks;
@@ -69,11 +74,19 @@ class _TasksListState extends State<TasksList> {
     }
   }
 
-  int compareTimeOfDay(TimeOfDay a, TimeOfDay b) {
-    if (a.hour == b.hour) {
-      return a.minute.compareTo(b.minute);
+  int compareTimeOfDay(TimeOfDay? a, TimeOfDay? b) {
+    if (a == null && b == null) {
+      return 0;
+    } else if (a == null) {
+      return 1;
+    } else if (b == null) {
+      return -1;
+    } else {
+      if (a.hour == b.hour) {
+        return a.minute.compareTo(b.minute);
+      }
+      return a.hour.compareTo(b.hour);
     }
-    return a.hour.compareTo(b.hour);
   }
 
   void _sortTasks() {
@@ -189,7 +202,9 @@ class _TasksListState extends State<TasksList> {
                                   contentPadding: EdgeInsets.zero,
                                   title: Text(task['title'],
                                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
-                                  subtitle: Text(DateFormat('EEEE, d MMMM').format(task['date'])),
+                                  subtitle: widget.onCalendarPage
+                                      ? null
+                                      : Text(DateFormat('EEEE, d MMMM').format(task['date'])),
                                   trailing: Transform.scale(
                                     scale: 1.5,
                                     child: Checkbox(
