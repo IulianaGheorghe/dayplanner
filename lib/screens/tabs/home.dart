@@ -269,7 +269,7 @@ class _HomeState extends State<Home>{
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(right: 10),
-                      child: TasksList(category: _selectedCategory),
+                      child: TasksList(category: _selectedCategory, sortingType: _selectedSortingType),
                     ),
                   ),
                 ],

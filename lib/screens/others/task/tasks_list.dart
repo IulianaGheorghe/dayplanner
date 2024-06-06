@@ -11,7 +11,8 @@ bool isTaskDeleting = false;
 
 class TasksList extends StatefulWidget {
   final String category;
-  const TasksList({super.key, required this.category});
+  final String sortingType;
+  const TasksList({super.key, required this.category, required this.sortingType});
 
   @override
   State<TasksList> createState() => _TasksListState();
@@ -26,6 +27,9 @@ class _TasksListState extends State<TasksList> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.category != widget.category) {
       handleTasksData();
+    }
+    if (oldWidget.sortingType != widget.sortingType) {
+      _sortTasks();
     }
   }
 
@@ -47,8 +51,51 @@ class _TasksListState extends State<TasksList> {
     if (mounted) {
       setState(() {
         tasksData = tasks;
+        _sortTasks();
       });
     }
+  }
+
+  int getPriorityValue(String priority) {
+    switch (priority) {
+      case 'High':
+        return 1;
+      case 'Medium':
+        return 2;
+      case 'Low':
+        return 3;
+      default:
+        return 4;
+    }
+  }
+
+  int compareTimeOfDay(TimeOfDay a, TimeOfDay b) {
+    if (a.hour == b.hour) {
+      return a.minute.compareTo(b.minute);
+    }
+    return a.hour.compareTo(b.hour);
+  }
+
+  void _sortTasks() {
+    setState(() {
+      if (widget.sortingType == 'Sort by Priority') {
+        tasksData.sort((a, b) {
+          int priorityComparison = getPriorityValue(a['priority']).compareTo(getPriorityValue(b['priority']));
+          if (priorityComparison == 0) {
+            return compareTimeOfDay(a['startTime'], b['startTime']);
+          }
+          return priorityComparison;
+        });
+      } else {
+        tasksData.sort((a, b) {
+          int timeComparison = compareTimeOfDay(a['startTime'], b['startTime']);
+          if (timeComparison == 0) {
+            return getPriorityValue(a['priority']).compareTo(getPriorityValue(b['priority']));
+          }
+          return timeComparison;
+        });
+      }
+    });
   }
 
   @override
