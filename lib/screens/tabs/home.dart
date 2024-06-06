@@ -39,6 +39,8 @@ class _HomeState extends State<Home>{
   }
 
   String chooseCategory = "All";
+  String _chooseTaskSorting = 'Sort by Priority';
+  String _selectedSortingType = 'Sort by Priority';
 
   @override
   Widget build(BuildContext context) {
@@ -221,6 +223,48 @@ class _HomeState extends State<Home>{
                         ],
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 15),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width / 1.2,
+                    height: 55,
+                    child: DropdownButtonFormField(
+                      isExpanded: true,
+                      dropdownColor: Colors.white.withOpacity(0.9),
+                      decoration: InputDecoration(
+                        fillColor: Colors.white.withOpacity(0.5),
+                        filled: true,
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(color: Colors.transparent),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(color: Colors.transparent),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      value: _chooseTaskSorting,
+                      items: ['Sort by Priority', 'Sort by Start Time'].map(
+                            (sortingOption) =>
+                            DropdownMenuItem(
+                              value: sortingOption,
+                              child: Text(
+                                sortingOption,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: _chooseTaskSorting == sortingOption ? primaryColor : Colors.black,
+                                ),
+                              ),
+                            ),
+                      ).toList(),
+                      onChanged: (val) {
+                        setState(() {
+                          _chooseTaskSorting = val as String;
+                          _selectedSortingType = _chooseTaskSorting;
+                        });
+                      },
+                    ),
                   ),
                   Expanded(
                     child: Padding(
