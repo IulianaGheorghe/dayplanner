@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../config.dart';
 import '../../util/constants.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -15,23 +17,45 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  LocationData? _currentLocation;
+  CameraPosition? _initialCameraPosition;
   Set<Marker> _markers = Set<Marker>();
+  final Location _location = Location();
   // List<LatLng> _polylineCoordinates = [];
 
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    _checkLocationService();
+  }
+
+  Future<void> _checkLocationService() async {
+    final serviceEnabled = await _location.serviceEnabled();
+
+    if (!serviceEnabled) {
+      if (! await _location.requestService()) {
+        setState(() {
+          _initialCameraPosition = const CameraPosition(target: LatLng(48, 13), zoom: 4);
+        });
+      } else {
+        if (await Permission.locationWhenInUse.serviceStatus.isEnabled) {
+          _getCurrentLocation();
+        }
+      }
+    } else {
+      _getCurrentLocation();
+    }
   }
 
   Future<void> _getCurrentLocation() async {
-    Location location = Location();
-
     try {
-      LocationData locationData = await location.getLocation();
+      print("daa0");
+      LocationData locationData = await _location.getLocation();
+      print("ahhh $locationData");
       setState(() {
-        _currentLocation = locationData;
+        _initialCameraPosition = CameraPosition(
+          target: LatLng(locationData.latitude!, locationData.longitude!),
+          zoom: 14,
+        );
       });
     } catch (e) {
       Exception('Error getting location: $e');
@@ -74,28 +98,27 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget _buildMap() {
-    return GoogleMap(
-      onMapCreated: (controller) {
-        setState(() {});
-      },
-      initialCameraPosition: const CameraPosition(
-        target: LatLng(0.0, 0.0),
-        zoom: 2,
-      ),
-      myLocationEnabled: true,
-      // polylines: {
-      //   Polyline(
-      //     polylineId: const PolylineId("route"),
-      //     points: _polylineCoordinates,
-      //     color: primaryColor,
-      //     width: 6,
-      //   )
-      // },
-      markers: _markers,
-      onTap: (LatLng location) {
-        _addMarker(location);
-      },
-    );
+    return _initialCameraPosition == null
+      ? const Center(child: CircularProgressIndicator(color: primaryColor,))
+      : GoogleMap(
+        onMapCreated: (controller) {
+          setState(() {});
+        },
+        initialCameraPosition: _initialCameraPosition!,
+        myLocationEnabled: true,
+        // polylines: {
+        //   Polyline(
+        //     polylineId: const PolylineId("route"),
+        //     points: _polylineCoordinates,
+        //     color: primaryColor,
+        //     width: 6,
+        //   )
+        // },
+        markers: _markers,
+        onTap: (LatLng location) {
+          _addMarker(location);
+        },
+      );
   }
 
   void _addMarker(LatLng? location) async{
