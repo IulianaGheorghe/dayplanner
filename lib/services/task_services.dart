@@ -141,12 +141,10 @@ Future<String> getCategoryId(String userID, String category) async {
       .doc(userID)
       .collection('categories')
       .where('name', isEqualTo: category)
+      .limit(1)
       .get();
 
-  for (var doc in snapshot.docs) {
-    id = doc.id;
-  }
-
+  id = snapshot.docs.first.id;
   return id;
 }
 
@@ -226,9 +224,7 @@ Future<void> updateStatus(String userID, String task, String formattedDate, Stri
       .update({'status': status});
 }
 
-Future<List<Map<String, dynamic>>> getAllTasksForToday(String userID) async {
-  final todayDate = DateTime.now();
-  String formattedDate = DateFormat('yyyy-MM-dd').format(todayDate);
+Future<List<Map<String, dynamic>>> getAllTasks(String userID, String date) async {
   List<Map<String, dynamic>> tasksData = [];
 
   try {
@@ -236,7 +232,7 @@ Future<List<Map<String, dynamic>>> getAllTasksForToday(String userID) async {
         .collection("users")
         .doc(userID)
         .collection("tasks")
-        .doc(formattedDate)
+        .doc(date)
         .collection("day tasks")
         .get();
 
@@ -277,9 +273,7 @@ Future<List<Map<String, dynamic>>> getAllTasksForToday(String userID) async {
   }
 }
 
-Future<List<Map<String, dynamic>>> getTasksByCategoryForToday(String userID, String category) async {
-  final todayDate = DateTime.now();
-  String formattedDate = DateFormat('yyyy-MM-dd').format(todayDate);
+Future<List<Map<String, dynamic>>> getTasksByCategory(String userID, String category, String date) async {
   List<Map<String, dynamic>> tasksData = [];
 
   try {
@@ -287,7 +281,7 @@ Future<List<Map<String, dynamic>>> getTasksByCategoryForToday(String userID, Str
         .collection("users")
         .doc(userID)
         .collection("tasks")
-        .doc(formattedDate)
+        .doc(date)
         .collection("day tasks")
         .where('category', isEqualTo: category)
         .get();
@@ -352,7 +346,18 @@ Future<void> addInitialCategories(String userID) async {
   await addCategory('Household', userID);
 }
 
-Future<List<dynamic>> getCategories(String userID) async {
+Future<bool> categoryAlreadyExists(String name, String userID) async {
+  QuerySnapshot categorySnapshot = await _firestore.collection('users')
+      .doc(userID)
+      .collection('categories')
+      .where('name', isEqualTo: name)
+      .limit(1)
+      .get();
+
+  return categorySnapshot.size > 0 ? true : false;
+}
+
+Future<List<String>> getCategories(String userID) async {
   try {
     final snapshot = await _firestore.collection('users')
         .doc(userID)
@@ -360,14 +365,27 @@ Future<List<dynamic>> getCategories(String userID) async {
         .orderBy('name')
         .get();
 
-    List<dynamic> categories = snapshot.docs.map((doc) {
+    List<String> categories = snapshot.docs.map((doc) {
       Map<String, dynamic> data = doc.data();
-      return data['name'];
+      String name = data['name'];
+      return name;
     }).toList();
 
     return categories;
   } catch (e) {
     throw Exception('Error fetching categories names: $e');
+  }
+}
+
+Future<void> deleteCategory(String categoryName, String userID) async{
+  try {
+    String categoryID = await getCategoryId(userID, categoryName);
+    await _firestore.collection("users").doc(userID)
+        .collection("categories")
+        .doc(categoryID)
+        .delete();
+  } catch (e) {
+    throw Exception('Error deleting category: $e');
   }
 }
 

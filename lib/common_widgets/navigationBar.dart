@@ -1,9 +1,11 @@
 import 'package:dayplanner/util/constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../screens/others/task/tasks_list.dart';
 import '../screens/tabs/account.dart';
 import '../screens/tabs/calendar.dart';
+import '../screens/tabs/friends.dart';
 import '../screens/tabs/home.dart';
 
 class MyBottomNavigationBar extends StatefulWidget {
@@ -16,12 +18,15 @@ class MyBottomNavigationBar extends StatefulWidget {
 }
 
 class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
+  String userID = '';
   late int index;
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    userID = currentUser!.uid;
     index = widget.index;
   }
 
@@ -40,7 +45,7 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
   }
 
   void handleTabSelection(int selectedIndex) async{
-    if (selectedIndex == 1 || selectedIndex == 2) {
+    if (selectedIndex == 1 || selectedIndex == 3) {
       await waitForTaskDeletion();
     }
     if (mounted) {
@@ -50,13 +55,15 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
     }
   }
 
-  final screens = [
-    const Home(),
-    const Calendar(),
-    const Account(),
-  ];
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      const Home(),
+      const Calendar(),
+      const Friends(),
+      Account(userID: userID),
+    ];
+
     return Scaffold(
       body: Stack(
         children: [
@@ -81,12 +88,19 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
             label: 'Calendar',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.group),
+            label: 'Friends',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'You',
           ),
         ],
         currentIndex: index,
         selectedItemColor: primaryColor,
+        unselectedItemColor: Colors.grey.shade600,
+        showUnselectedLabels: true,
+        unselectedLabelStyle: TextStyle(color: Colors.grey.shade600),
         onTap: handleTabSelection,
       ),
     );

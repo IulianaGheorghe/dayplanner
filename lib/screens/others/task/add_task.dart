@@ -113,7 +113,7 @@ class _AddTaskState extends State<AddTask>{
       );
       try {
         await taskAdd.addToFirestore();
-        showSnackBar(context, "Task added successfully!");
+        showSnackBar(context, "Task successfully added!");
         Navigator.pop(context);
         Navigator.pushReplacement<void, void>(
           context,

@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dayplanner/screens/others/task/tasks_list.dart';
 import 'package:dayplanner/services/task_services.dart';
 import 'package:dayplanner/services/user_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../../common_widgets/indicator.dart';
@@ -15,7 +15,8 @@ import '../others/account/edit_profile.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class Account extends StatefulWidget{
-  const Account({super.key});
+  final String userID;
+  const Account({super.key, required this.userID});
 
   @override
   State<Account> createState() => _AccountState();
@@ -23,8 +24,10 @@ class Account extends StatefulWidget{
 
 class _AccountState extends State<Account>{
   String userID = '';
+  String currentUserID = '';
   String userName = "";
   String userEmail = "";
+  String userIdField = '';
   String userPhoto = "";
   File? _imageFile;
   List _categories = [];
@@ -42,11 +45,9 @@ class _AccountState extends State<Account>{
   @override
   void initState() {
     super.initState();
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw Exception('User does not exist!');
-    }
-    userID = user.uid;
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    currentUserID = currentUser!.uid;
+    userID = widget.userID;
 
     _getUserDetails();
     _tooltipBehavior = TooltipBehavior(enable: true);
@@ -55,9 +56,10 @@ class _AccountState extends State<Account>{
   }
 
   void _getUserDetails() async {
-    fetchDetails = userServices.getUserDetails();
-    Map<String, String> userDetails = await userServices.getUserDetails();
+    fetchDetails = userServices.getUserDetails(userID);
+    Map<String, String> userDetails = await userServices.getUserDetails(userID);
     setState(() {
+      userIdField = userDetails['userIdField']!;
       userName = userDetails['userName']!;
       userEmail = userDetails['userEmail']!;
       userPhoto = userDetails['userPhoto']!;
@@ -82,8 +84,11 @@ class _AccountState extends State<Account>{
 
   @override
   Widget build(BuildContext context) {
-    if (isTaskDeleting) {
-
+    bool isCurrentUserProfile;
+    if (userID == currentUserID) {
+      isCurrentUserProfile = true;
+    } else {
+      isCurrentUserProfile = false;
     }
     return MaterialApp(
       theme: ThemeData(
@@ -92,29 +97,39 @@ class _AccountState extends State<Account>{
         ),
       ),
       home: Scaffold(
-        appBar: AppBar(
+        appBar: isCurrentUserProfile
+        ? AppBar(
+            backgroundColor: profilePageColor,
+            actions: [
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'Edit profile') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const EditProfile()),
+                    );
+                  }
+                },
+                itemBuilder: (BuildContext context) {
+                  return [
+                    const PopupMenuItem<String>(
+                      value: 'Edit profile',
+                      child: Text('Edit profile')
+                    ),
+                  ];
+                },
+                icon: const Icon(Icons.more_vert),
+              ),
+            ],
+          )
+        : AppBar(
+          leading: BackButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            color: Colors.black,
+          ),
           backgroundColor: profilePageColor,
-          actions: [
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'Edit profile') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const EditProfile()),
-                  );
-                }
-              },
-              itemBuilder: (BuildContext context) {
-                return [
-                  const PopupMenuItem<String>(
-                    value: 'Edit profile',
-                    child: Text('Edit profile')
-                  ),
-                ];
-              },
-              icon: const Icon(Icons.more_vert),
-            ),
-          ],
         ),
         body: Stack(
           fit: StackFit.expand,
@@ -141,7 +156,7 @@ class _AccountState extends State<Account>{
                         return SingleChildScrollView(
                           child: Column(
                               children: [
-                                buildProfile(),
+                                buildProfile(isCurrentUserProfile),
                                 buildBarChart(),
                                 const SizedBox(height: 20),
                                 buildPieChart(),
@@ -163,7 +178,7 @@ class _AccountState extends State<Account>{
     );
   }
 
-  Widget buildProfile(){
+  Widget buildProfile(bool isCurrentUserProfile){
     ImageProvider<Object> imageShowed;
     if(_imageFile == null)
     {
@@ -173,12 +188,41 @@ class _AccountState extends State<Account>{
       userPhoto = 'photo';
     }
 
+    void copyToClipboard() {
+      Clipboard.setData(ClipboardData(text: userIdField));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ID copied to clipboard')),
+      );
+    }
+
     return Container(
-      height: 300,
-      width: MediaQuery.of(context).size.width / 2,
+      height: isCurrentUserProfile ? 325 : 285,
+      width: MediaQuery.of(context).size.width / 1.25,
       padding: const EdgeInsets.only(left: 16, bottom: 10, right: 16),
       child: ListView(
         children: [
+          isCurrentUserProfile
+          ? Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Center(
+                child: Text(
+                  "ID: $userIdField",
+                  style: const TextStyle(
+                    fontFamily: font1,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon:  Icon(Icons.copy, color: Colors.grey.shade600,),
+                onPressed: copyToClipboard,
+              ),
+            ],
+          )
+          : Container(),
+          const SizedBox(height: 10),
           Center(
             child: Stack(
               children: [
@@ -236,7 +280,6 @@ class _AccountState extends State<Account>{
               ),
             ),
           ),
-          const SizedBox(height: 5),
           Center(
             child: Text(
               userEmail,

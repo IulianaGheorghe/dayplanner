@@ -3,7 +3,7 @@ import 'package:dayplanner/services/task_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
+import 'package:nanoid/nanoid.dart';
 
 import '../common_widgets/showSnackBar.dart';
 
@@ -41,8 +41,7 @@ class FirebaseAuthMethods {
           throw Exception('Field cannot be empty.');
         }
 
-        var uuid = const Uuid();
-        String randomUserId = uuid.v4();
+        String randomUserId = nanoid(10);
 
         final credentials = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
         FirebaseFirestore.instance
