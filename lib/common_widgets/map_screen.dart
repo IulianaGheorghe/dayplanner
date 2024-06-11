@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+import 'package:nominatim_flutter/model/request/reverse_request.dart';
 import 'package:nominatim_flutter/model/request/search_request.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:nominatim_flutter/nominatim_flutter.dart';
@@ -22,6 +23,8 @@ class _MapScreenState extends State<MapScreen> {
   final Location _location = Location();
   late TextEditingController _searchController;
   GoogleMapController? _mapController;
+  LatLng? _currentLocation;
+  String? _currentCountry;
 
   @override
   void initState() {
@@ -52,23 +55,89 @@ class _MapScreenState extends State<MapScreen> {
     try {
       LocationData locationData = await _location.getLocation();
       setState(() {
+        _currentLocation = LatLng(locationData.latitude!, locationData.longitude!);
         _initialCameraPosition = CameraPosition(
-          target: LatLng(locationData.latitude!, locationData.longitude!),
+          target: _currentLocation!,
           zoom: 14,
         );
       });
+      await _getCurrentCountry();
     } catch (e) {
       Exception('Error getting location: $e');
     }
   }
 
+  // Future<List<Map<String, dynamic>>> _searchPlaces(String query) async {
+  //   final response = await NominatimFlutter.instance.search(
+  //     searchRequest: SearchRequest(query: query, limit: 10),
+  //     language: 'en-US,en;q=0.5',
+  //   );
+  //
+  //   if (response.isNotEmpty) {
+  //     final result = response.map<Map<String, dynamic>>((place) {
+  //       return {
+  //         'display_name': place.displayName,
+  //         'lat': place.lat,
+  //         'lon': place.lon,
+  //       };
+  //     }).toList();
+  //     return result;
+  //   } else {
+  //     throw Exception('Failed to load predictions');
+  //   }
+  // }
+
+  Future<void> _getCurrentCountry() async {
+    if (_currentLocation == null) return;
+
+    final reverseRequest = ReverseRequest(
+      lat: _currentLocation!.latitude,
+      lon: _currentLocation!.longitude,
+    );
+
+    try {
+      final response = await NominatimFlutter.instance.reverse(
+        reverseRequest: reverseRequest,
+        language: 'en-US,en;q=0.5',
+      );
+
+      final address = response.address as Map<String, dynamic>;
+      setState(() {
+        _currentCountry = address['country'] as String?;
+        print("tara");
+        print(_currentCountry);
+      });
+
+      print('Current country: $_currentCountry');
+    } catch (e) {
+      print('Error fetching country: $e');
+    }
+  }
+
   Future<List<Map<String, dynamic>>> _searchPlaces(String query) async {
+    if (_currentCountry == null) {
+      return [];
+    }
+    if (_currentLocation == null) {
+      return [];
+    }
+
+    final lat = _currentLocation!.latitude;
+    final lon = _currentLocation!.longitude;
+
+    // final viewbox = ViewBox(lat - 0.1, lat + 0.1, lon - 0.1, lon + 0.1);
+
     final response = await NominatimFlutter.instance.search(
-      searchRequest: SearchRequest(query: query, limit: 10),
+      searchRequest: SearchRequest(
+        query: query,
+        limit: 10,
+        countryCodes: ["Ro"],
+        // viewBox: viewbox,
+      ),
       language: 'en-US,en;q=0.5',
     );
 
-    if (response != null && response.isNotEmpty) {
+    if (response.isNotEmpty) {
       final result = response.map<Map<String, dynamic>>((place) {
         return {
           'display_name': place.displayName,
@@ -113,28 +182,29 @@ class _MapScreenState extends State<MapScreen> {
             color: Colors.transparent,
             padding: const EdgeInsets.only(left: 5, right: 55, top: 5),
             child: TypeAheadField(
+              controller: _searchController,
               builder: (context, controller, focusNode) => TextField(
-                controller: _searchController,
+                controller: controller,
                 focusNode: focusNode,
                 autofocus: false,
                 style: DefaultTextStyle.of(context).style.copyWith(fontStyle: FontStyle.italic),
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search),
+                  border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(15.0)),
                     borderSide: BorderSide(color: Colors.transparent),
                   ),
-                  enabledBorder: OutlineInputBorder(
+                  enabledBorder: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(15.0)),
                     borderSide: BorderSide(color: Colors.transparent),
                   ),
-                  focusedBorder: OutlineInputBorder(
+                  focusedBorder: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(15.0)),
                     borderSide: BorderSide(color: Colors.transparent, width: 2.5),
                   ),
                   hintText: 'Search Places',
                   filled: true,
-                  fillColor: Color(0xffeeeeee),
+                  fillColor: Colors.white.withOpacity(0.9),
                 ),
               ),
               suggestionsCallback: (pattern) async {
@@ -156,7 +226,7 @@ class _MapScreenState extends State<MapScreen> {
                 type: MaterialType.card,
                 elevation: 4,
                 borderRadius: BorderRadius.circular(10.0),
-                color: Color(0xffeeeeee),
+                color: Colors.white.withOpacity(0.9),
                 child: child,
               ),
             ),
@@ -176,7 +246,7 @@ class _MapScreenState extends State<MapScreen> {
 
   Widget _buildMap() {
     return _initialCameraPosition == null
-        ? Center(child: CircularProgressIndicator(color: primaryColor))
+        ? const Center(child: CircularProgressIndicator(color: primaryColor))
         : GoogleMap(
       onMapCreated: (controller) {
         _mapController = controller;
