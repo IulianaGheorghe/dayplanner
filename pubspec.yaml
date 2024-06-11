@@ -47,6 +47,10 @@ dependencies:
   location: ^6.0.2
   permission_handler: ^11.3.1
   url_launcher: ^6.3.0
+  flutter_typeahead: ^5.2.0
+  http: ^0.13.1
+  flutter_google_places: ^0.3.0
+  nominatim_flutter: ^0.0.3
 
   table_calendar: ^3.0.9
   nanoid: ^1.0.0
