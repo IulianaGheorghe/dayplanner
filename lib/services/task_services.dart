@@ -21,7 +21,7 @@ class Task {
 
   Task(this.userID, this.title, this.description, this.category, this.date, this.startTime, this.deadline, this.priority, this.destination, this.status, this.createdAt);
 
-  Future<void> addToFirestore() async {
+  Future<DocumentReference> addToFirestore() async {
     String formattedDate = DateFormat('yyyy-MM-dd').format(date);
 
     try {
@@ -81,6 +81,7 @@ class Task {
           int incrementedValue2 = currentNoOfTasks2 + 1;
           await documentRef2.update({'tasksCount': incrementedValue2});
         }
+        return newTaskRef;
       }
     } catch (e) {
       throw Exception('Task cannot be added to firebase.');

@@ -270,6 +270,7 @@ class _HomeState extends State<Home>{
                       },
                     ),
                   ),
+                  const SizedBox(height: 5),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(right: 10),

@@ -61,6 +61,16 @@ class _TasksListState extends State<TasksList> {
     }
   }
 
+  // void markTaskAsDone(String userId, String taskId, String formattedDate) async{
+  //   int index = tasksData.indexWhere((task) => task['id'] == taskId);
+  //   if (index != -1) {
+  //     tasksData[index]['status'] = 'Done';
+  //     await updateStatus(userId, taskId, formattedDate, 'Done');
+  //     setState(() {});
+  //   }
+  //   taskStatusUpdateService.notifyTaskUpdated();
+  // }
+
   int getPriorityValue(String priority) {
     switch (priority) {
       case 'High':
@@ -107,6 +117,19 @@ class _TasksListState extends State<TasksList> {
           }
           return timeComparison;
         });
+      }
+    });
+  }
+
+  void updateTaskStatus(List<String> payloadParts) async{
+    String userID = payloadParts[0];
+    String taskID = payloadParts[1];
+    String formattedDate = payloadParts[2];
+    await updateStatus(userID, taskID, formattedDate, 'Done');
+    setState(() {
+      int index = tasksData.indexWhere((task) => task['id'] == taskID);
+      if (index != -1) {
+        tasksData[index]['status'] = 'Done';
       }
     });
   }
@@ -203,8 +226,8 @@ class _TasksListState extends State<TasksList> {
                                   title: Text(task['title'],
                                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
                                   subtitle: widget.onCalendarPage
-                                      ? null
-                                      : Text(DateFormat('EEEE, d MMMM').format(task['date'])),
+                                      ? Text(DateFormat('EEEE, d MMMM').format(task['date']))
+                                      : null,
                                   trailing: Transform.scale(
                                     scale: 1.5,
                                     child: Checkbox(

@@ -7,7 +7,7 @@ import 'package:timezone/data/latest.dart' as tz;
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  NotificationService().initialize();
+  await NotificationService().initialize();
   tz.initializeTimeZones();
 
   runApp(const MyApp());
@@ -20,12 +20,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(primarySwatch: Colors.blue),
-        initialRoute: '/welcome_screen',
-        routes: {
-          '/welcome_screen': (context) => const WelcomeScreen(),
-        }
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(primarySwatch: Colors.blue),
+      initialRoute: '/welcome_screen',
+      routes: {
+        '/welcome_screen': (context) => const WelcomeScreen(),
+      }
     );
   }
 }

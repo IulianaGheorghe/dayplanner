@@ -1,10 +1,11 @@
 import 'dart:math';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:intl/intl.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:timezone/timezone.dart' as tz;
 import '../../../common_widgets/map_screen.dart';
@@ -45,6 +46,7 @@ class _AddTaskState extends State<AddTask>{
 
   FirebaseAuthMethods authMethods = FirebaseAuthMethods();
   UserServices userServices = UserServices();
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
@@ -122,7 +124,8 @@ class _AddTaskState extends State<AddTask>{
         DateTime.now(),
       );
       try {
-        await taskAdd.addToFirestore();
+        DocumentReference taskRef = await taskAdd.addToFirestore();
+        String taskId = taskRef.id;
         showSnackBar(context, "Task successfully added!");
         Navigator.pop(context);
         Navigator.pushReplacement<void, void>(
@@ -140,11 +143,47 @@ class _AddTaskState extends State<AddTask>{
               _selectedStartTime!.hour,
               _selectedStartTime!.minute
           );
-          NotificationService().showScheduledNotification(
+          _notificationService.showScheduledNotification(
             id: taskAdd.hashCode + Random().nextInt(1000),
             title: 'Task $_title',
             body: 'Your task $_title starts now',
             scheduledDate: startTime,);
+        }
+
+        if (_selectedDeadline != null) {
+          String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+          DateTime deadlineTime = DateTime(
+            _selectedDate.year,
+            _selectedDate.month,
+            _selectedDate.day,
+            _selectedDeadline!.hour,
+            _selectedDeadline!.minute,
+          );
+          _notificationService.showScheduledNotificationWithActions(
+            id: taskAdd.hashCode + Random().nextInt(1000),
+            title: 'Your task $_title is due now',
+            body: 'Would you like to mark it as done?',
+            scheduledDate: deadlineTime,
+            actions: <AndroidNotificationAction>[
+              const AndroidNotificationAction(
+                'yes_action',
+                'Yes',
+                showsUserInterface: false,
+              ),
+              const AndroidNotificationAction(
+                'no_action',
+                'No',
+                showsUserInterface: false,
+              ),
+            ],
+            payload: '$userID|$taskId|$formattedDate',
+          );
+          // _notificationService.showScheduledNotification(
+          //   id: taskAdd.hashCode + Random().nextInt(1000),
+          //   title: 'Task $_title deadline approaching',
+          //   body: 'Your task $_title is due in 5 minutes',
+          //   scheduledDate: deadlineTime.subtract(const Duration(minutes: 5)),
+          // );
         }
       } catch (e) {
         throw Exception('Error adding task to db: $e');
@@ -191,6 +230,7 @@ class _AddTaskState extends State<AddTask>{
                   const SizedBox(height: 16),
                   TextFormField(
                     decoration: addPageInputStyle("Enter Task Name"),
+                    textCapitalization: TextCapitalization.sentences,
                     cursorColor: inputDecorationColor,
                     maxLength: 30,
                     validator: (value) {
@@ -209,6 +249,7 @@ class _AddTaskState extends State<AddTask>{
                   const SizedBox(height: 16),
                   TextFormField(
                     decoration: addPageInputStyle("Enter Task Description"),
+                    textCapitalization: TextCapitalization.sentences,
                     cursorColor: inputDecorationColor,
                     keyboardType: TextInputType.multiline,
                     maxLines: 5,
