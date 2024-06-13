@@ -58,6 +58,10 @@ dependencies:
   fluttertoast: ^8.2.5
   fl_chart: ^0.68.0
   syncfusion_flutter_charts: ^25.2.6
+  rxdart: ^0.26.0
+  flutter_local_notifications: ^17.1.2
+  timezone: ^0.9.3
+  path_provider: ^2.1.3
 
 dev_dependencies:
   flutter_test:

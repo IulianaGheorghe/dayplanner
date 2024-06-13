@@ -1,15 +1,22 @@
+import 'dart:math';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:rxdart/rxdart.dart';
+import 'package:timezone/timezone.dart' as tz;
 import '../../../common_widgets/map_screen.dart';
 import '../../../common_widgets/navigationBar.dart';
 import '../../../common_widgets/showSnackBar.dart';
+import '../../../main.dart';
 import '../../../services/auth_methods.dart';
 import '../../../services/task_services.dart';
 import '../../../services/user_services.dart';
 import '../../../util/components.dart';
 import '../../../util/constants.dart';
+import '../../../util/notification_service.dart';
 
 class AddTask extends StatefulWidget{
   const AddTask({super.key});
@@ -32,6 +39,9 @@ class _AddTaskState extends State<AddTask>{
   String _status = "To do";
   String userID = '';
   List categoriesList = [];
+  String choosePriority = "Low";
+  List priorityList = ["Low", "Medium", "High"];
+  String chooseCategory = "No category";
 
   FirebaseAuthMethods authMethods = FirebaseAuthMethods();
   UserServices userServices = UserServices();
@@ -121,15 +131,26 @@ class _AddTaskState extends State<AddTask>{
             builder: (BuildContext context) => const MyBottomNavigationBar(index: 0),
           ),
         );
+
+        if (_selectedStartTime != null) {
+          DateTime startTime = DateTime(
+              _selectedDate.year,
+              _selectedDate.month,
+              _selectedDate.day,
+              _selectedStartTime!.hour,
+              _selectedStartTime!.minute
+          );
+          NotificationService().showScheduledNotification(
+            id: taskAdd.hashCode + Random().nextInt(1000),
+            title: 'Task $_title',
+            body: 'Your task $_title starts now',
+            scheduledDate: startTime,);
+        }
       } catch (e) {
         throw Exception('Error adding task to db: $e');
       }
     }
   }
-
-  String choosePriority = "Low";
-  List priorityList = ["Low", "Medium", "High"];
-  String chooseCategory = "No category";
 
   @override
   Widget build(BuildContext context) {

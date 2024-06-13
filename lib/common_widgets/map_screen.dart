@@ -24,7 +24,7 @@ class _MapScreenState extends State<MapScreen> {
   late TextEditingController _searchController;
   GoogleMapController? _mapController;
   LatLng? _currentLocation;
-  String? _currentCountry;
+  String? _currentCountryCode;
 
   @override
   void initState() {
@@ -61,33 +61,13 @@ class _MapScreenState extends State<MapScreen> {
           zoom: 14,
         );
       });
-      await _getCurrentCountry();
+      await _getCurrentCountryCode();
     } catch (e) {
       Exception('Error getting location: $e');
     }
   }
 
-  // Future<List<Map<String, dynamic>>> _searchPlaces(String query) async {
-  //   final response = await NominatimFlutter.instance.search(
-  //     searchRequest: SearchRequest(query: query, limit: 10),
-  //     language: 'en-US,en;q=0.5',
-  //   );
-  //
-  //   if (response.isNotEmpty) {
-  //     final result = response.map<Map<String, dynamic>>((place) {
-  //       return {
-  //         'display_name': place.displayName,
-  //         'lat': place.lat,
-  //         'lon': place.lon,
-  //       };
-  //     }).toList();
-  //     return result;
-  //   } else {
-  //     throw Exception('Failed to load predictions');
-  //   }
-  // }
-
-  Future<void> _getCurrentCountry() async {
+  Future<void> _getCurrentCountryCode() async {
     if (_currentLocation == null) return;
 
     final reverseRequest = ReverseRequest(
@@ -101,27 +81,21 @@ class _MapScreenState extends State<MapScreen> {
         language: 'en-US,en;q=0.5',
       );
 
-      final address = response.address as Map<String, dynamic>;
+      final address = response.address;
       setState(() {
-        _currentCountry = address['country'] as String?;
-        print("tara");
-        print(_currentCountry);
+        _currentCountryCode = address?['country_code'] as String?;
       });
 
-      print('Current country: $_currentCountry');
+      print('Current country code: $_currentCountryCode');
     } catch (e) {
-      print('Error fetching country: $e');
+      Exception('Error fetching country code: $e');
     }
   }
 
   Future<List<Map<String, dynamic>>> _searchPlaces(String query) async {
-    if (_currentCountry == null) {
+    if (_currentLocation == null || _currentCountryCode == null) {
       return [];
     }
-    if (_currentLocation == null) {
-      return [];
-    }
-
     final lat = _currentLocation!.latitude;
     final lon = _currentLocation!.longitude;
 
@@ -131,7 +105,7 @@ class _MapScreenState extends State<MapScreen> {
       searchRequest: SearchRequest(
         query: query,
         limit: 10,
-        countryCodes: ["Ro"],
+        countryCodes: [_currentCountryCode!],
         // viewBox: viewbox,
       ),
       language: 'en-US,en;q=0.5',
