@@ -2,7 +2,6 @@ import 'package:dayplanner/screens/others/task/task_details.dart';
 import 'package:dayplanner/services/task_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../../util/components.dart';
 import '../../../util/constants.dart';
@@ -121,19 +120,6 @@ class _TasksListState extends State<TasksList> {
     });
   }
 
-  void updateTaskStatus(List<String> payloadParts) async{
-    String userID = payloadParts[0];
-    String taskID = payloadParts[1];
-    String formattedDate = payloadParts[2];
-    await updateStatus(userID, taskID, formattedDate, 'Done');
-    setState(() {
-      int index = tasksData.indexWhere((task) => task['id'] == taskID);
-      if (index != -1) {
-        tasksData[index]['status'] = 'Done';
-      }
-    });
-  }
-
   @override
   void dispose() {
     super.dispose();
@@ -141,9 +127,6 @@ class _TasksListState extends State<TasksList> {
 
   @override
   Widget build(BuildContext context) {
-    final todayDate = DateTime.now();
-    String formattedDate = DateFormat('yyyy-MM-dd').format(todayDate);
-
     return ListView.builder(
       itemCount: tasksData.length,
       itemBuilder: (context, index) {
@@ -169,11 +152,17 @@ class _TasksListState extends State<TasksList> {
                   ),
                 ),
                 onDismissed: (direction) async {
+                  final taskToDelete = tasksData[index];
                   setState(() {
                     tasksData.removeAt(index);
                     isTaskDeleting = true;
                   });
-                  await deleteTask(userID!, task['id'], formattedDate, task['category']);
+                  await deleteTask(
+                      userID!,
+                      taskToDelete['id'],
+                      DateFormat('yyyy-MM-dd').format(task['date']),
+                      taskToDelete['category']
+                  );
                   setState(() {
                     isTaskDeleting = false;
                   });
@@ -231,7 +220,7 @@ class _TasksListState extends State<TasksList> {
                                   trailing: Transform.scale(
                                     scale: 1.5,
                                     child: Checkbox(
-                                      checkColor: Colors.greenAccent,
+                                      checkColor: Colors.white,
                                       activeColor: primaryColor,
                                       shape: const CircleBorder(),
                                       value: isChecked,
@@ -241,7 +230,11 @@ class _TasksListState extends State<TasksList> {
                                             task['status'] = (isChecked == true)
                                                 ? 'Done'
                                                 : 'To do';
-                                            updateStatus(userID!, task['id'], formattedDate, task['status']);
+                                            updateStatus(
+                                                userID!, task['id'],
+                                                DateFormat('yyyy-MM-dd').format(task['date']),
+                                                task['status']
+                                            );
                                           }),
                                     ),
                                   ),
