@@ -217,7 +217,9 @@ class _TasksListState extends State<TasksList> {
                                   subtitle: widget.onCalendarPage
                                       ? Text(DateFormat('EEEE, d MMMM').format(task['date']))
                                       : null,
-                                  trailing: Transform.scale(
+                                  trailing: widget.onCalendarPage
+                                      ? null
+                                      : Transform.scale(
                                     scale: 1.5,
                                     child: Checkbox(
                                       checkColor: Colors.white,
@@ -249,10 +251,12 @@ class _TasksListState extends State<TasksList> {
                                       ),
                                       Row(
                                         children: [
-                                          task['startTime'] != null ?
-                                            Text("Start time: ${task['startTime'].hour}:${task['startTime'].minute}")
+                                          task['startTime'] != null
+                                            ? Row(children: [
+                                              Text("Start time: ${task['startTime'].hour}:${task['startTime'].minute}"),
+                                              const SizedBox(width: 32),
+                                            ],)
                                             : const Text(""),
-                                          const SizedBox(width: 32),
                                           task['deadline'] != null ?
                                             Text("Deadline: ${task['deadline'].hour}:${task['deadline'].minute}")
                                             : const Text(""),

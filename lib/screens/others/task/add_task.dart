@@ -268,7 +268,7 @@ class _AddTaskState extends State<AddTask>{
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 16),
-                  titleStyle("Task Title", secondaryTitleSize),
+                  titleStyle("Task Title*", secondaryTitleSize),
                   const SizedBox(height: 16),
                   TextFormField(
                     decoration: addPageInputStyle("Enter Task Name"),

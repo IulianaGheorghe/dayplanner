@@ -312,7 +312,9 @@ class _HomeState extends State<Home>{
   }
 
   void _showDeleteCategoryDialog() {
-    Map<String, bool> selectedCategories = {for (var category in _categoriesList) category: false};
+    List<String> categorieslist = _categoriesList;
+    categorieslist.remove('All');
+    Map<String, bool> selectedCategories = {for (var category in categorieslist) category: false};
     String? errorMessage;
 
     Future<void> deleteSelectedCategories() async {
