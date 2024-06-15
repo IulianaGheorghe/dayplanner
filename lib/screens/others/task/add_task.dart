@@ -450,7 +450,7 @@ class _AddTaskState extends State<AddTask>{
                         ),
                       ),
                       chipDisplay: MultiSelectChipDisplay(
-                        chipColor: Colors.blue.withOpacity(0.1),
+                        chipColor: Colors.grey.shade200,
                         textStyle: const TextStyle(
                           color: primaryColor,
                         ),
@@ -591,7 +591,7 @@ class _AddTaskState extends State<AddTask>{
                         ),
                       ),
                       chipDisplay: MultiSelectChipDisplay(
-                        chipColor: Colors.blue.withOpacity(0.1),
+                        chipColor: Colors.grey.shade200,
                         textStyle: const TextStyle(
                           color: primaryColor,
                         ),

@@ -108,9 +108,17 @@ class _TasksListState extends State<TasksList> {
           }
           return priorityComparison;
         });
-      } else {
+      } else if (widget.sortingType == 'Sort by Start Time') {
         tasksData.sort((a, b) {
           int timeComparison = compareTimeOfDay(a['startTime'], b['startTime']);
+          if (timeComparison == 0) {
+            return getPriorityValue(a['priority']).compareTo(getPriorityValue(b['priority']));
+          }
+          return timeComparison;
+        });
+      } else {
+        tasksData.sort((a, b) {
+          int timeComparison = compareTimeOfDay(a['deadline'], b['deadline']);
           if (timeComparison == 0) {
             return getPriorityValue(a['priority']).compareTo(getPriorityValue(b['priority']));
           }

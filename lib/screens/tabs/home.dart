@@ -248,7 +248,7 @@ class _HomeState extends State<Home>{
                         ),
                       ),
                       value: _chooseTaskSorting,
-                      items: ['Sort by Priority', 'Sort by Start Time'].map(
+                      items: ['Sort by Priority', 'Sort by Start Time', 'Sort by Deadline'].map(
                             (sortingOption) =>
                             DropdownMenuItem(
                               value: sortingOption,
