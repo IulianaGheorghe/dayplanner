@@ -13,6 +13,7 @@ const newTaskColor = Color(0xff52BF96);
 const green = Color(0xff18ee25);
 const profilePageColor = Color(0xff289EC6);
 const friendsPageColor = Color(0xffFEC49E);
+const errorColor = Color(0xffef4949);
 // A6ECF4 lightbluegreen
 // 0xff7c6b81
 // 0xffb603cc

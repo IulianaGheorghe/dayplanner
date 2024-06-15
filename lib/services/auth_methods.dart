@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dayplanner/services/task_services.dart';
+import 'package:dayplanner/util/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,7 @@ class FirebaseAuthMethods {
     await Firebase.initializeApp();
 
     if (await doesUserExist(email)) {
-      showSnackBar(context, 'An user with same email already exists!');
+      showSnackBar(context, 'An user with same email already exists!', errorColor);
       throw Exception('An user with same email already exists!');
     } else {
       try {
@@ -56,7 +57,7 @@ class FirebaseAuthMethods {
 
         addInitialCategories(credentials.user!.uid);
       } catch (e) {
-        showSnackBar(context, e.toString());
+        showSnackBar(context, e.toString(), errorColor);
         throw Exception('Failed to create user: $e');
       }
     }
@@ -76,7 +77,7 @@ class FirebaseAuthMethods {
           password: password
       );
     } on FirebaseAuthException catch (e) {
-      showSnackBar(context, e.message!);
+      showSnackBar(context, e.message!, errorColor);
       throw Exception('User does not exist!');
     }
   }
@@ -91,12 +92,12 @@ class FirebaseAuthMethods {
     try {
       if (await doesUserExist(email)) {
         await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-        showSnackBar(context, 'Password Reset Email Sent');
+        showSnackBar(context, 'Password Reset Email Sent', primaryColor);
       } else {
-        showSnackBar(context, 'Email is not valid');
+        showSnackBar(context, 'Email is not valid', errorColor);
       }
     } on FirebaseAuthException catch (e) {
-      showSnackBar(context, e.message!);
+      showSnackBar(context, e.message!, errorColor);
     }
   }
 }

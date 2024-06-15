@@ -167,7 +167,7 @@ class _CalendarState extends State<Calendar>{
                       context,
                       MaterialPageRoute(builder: (context) => AddTask(date: _selectedDay, index: 1)),
                     )
-                  : showSnackBar(context, "You can't add a task for a past date.");
+                  : showSnackBar(context, "You can't add a task for a past date.", errorColor);
             },
             backgroundColor: primaryColor,
             shape: RoundedRectangleBorder(

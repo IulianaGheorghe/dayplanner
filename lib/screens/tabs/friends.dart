@@ -177,7 +177,7 @@ class _FriendsState extends State<Friends> {
               setState(() {
                 friendsDetails.removeAt(index);
               });
-              showSnackBar(context, "Friend successfully deleted");
+              showSnackBar(context, "Friend successfully deleted", primaryColor);
               await userServices.deleteFriend(friend['uid']!);
             },
             child: GestureDetector(
@@ -318,7 +318,7 @@ class _FriendsState extends State<Friends> {
                       });
                     } else {
                       await userServices.addFriend(friendId);
-                      showSnackBar(context, "Friend successfully added");
+                      showSnackBar(context, "Friend successfully added", primaryColor);
                       setState(() {
                         localErrorMessage = null;
                       });

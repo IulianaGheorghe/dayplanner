@@ -73,7 +73,7 @@ class _EditProfileState extends State<EditProfile>{
     }
     else
     {
-      showSnackBar(context, 'Image not added!');
+      showSnackBar(context, 'Image not added!', errorColor);
     }
   }
 

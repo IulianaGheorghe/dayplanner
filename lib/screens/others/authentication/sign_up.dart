@@ -87,8 +87,8 @@ class _SignUp extends State<SignUp> {
                                               'Name', 'Enter your name'),
                                           validator: (value) {
                                             if (value == null || value.isEmpty) {
-                                              showSnackBar( context, 'Please complete all fields.');
-                                              throw Exception('Field cannot be empty.');
+                                              showSnackBar( context, 'Please complete all fields.', errorColor);
+                                              return;
                                             }
                                             return null;
                                           },
@@ -107,8 +107,8 @@ class _SignUp extends State<SignUp> {
                                               'E-mail', 'Enter your e-mail'),
                                           validator: (value) {
                                             if (value == null || value.isEmpty) {
-                                              showSnackBar( context, 'Please complete all fields.');
-                                              throw Exception('Field cannot be empty.');
+                                              showSnackBar( context, 'Please complete all fields.', errorColor);
+                                              return;
                                             }
                                             return null;
                                           },
@@ -128,8 +128,8 @@ class _SignUp extends State<SignUp> {
                                               'Password', 'Enter your password'),
                                           validator: (value) {
                                             if (value == null || value.isEmpty) {
-                                              showSnackBar( context, 'Please complete all fields.');
-                                              throw Exception('Field cannot be empty.');
+                                              showSnackBar( context, 'Please complete all fields.', errorColor);
+                                              return;
                                             }
                                             return null;
                                           },
@@ -149,8 +149,8 @@ class _SignUp extends State<SignUp> {
                                               'Repeat your password'),
                                           validator: (value) {
                                             if (value == null || value.isEmpty) {
-                                              showSnackBar( context, 'Please complete all fields.');
-                                              throw Exception('Field cannot be empty.');
+                                              showSnackBar( context, 'Please complete all fields.', errorColor);
+                                              return;
                                             }
                                             return null;
                                           },

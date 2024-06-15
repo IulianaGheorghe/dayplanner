@@ -101,7 +101,7 @@ class _AddTaskState extends State<AddTask>{
     if (pickedTime != null) {
       if (_selectedDate.isSameDate(DateTime.now())) {
         if (pickedTime.hour < now.hour || (pickedTime.hour == now.hour && pickedTime.minute <= now.minute)) {
-          showSnackBar(context, 'Please select a time later than the current time.');
+          showSnackBar(context, 'Please select a time later than the current time.', errorColor);
           return;
         }
       }
@@ -122,7 +122,7 @@ class _AddTaskState extends State<AddTask>{
     if (pickedTime != null) {
       if (_selectedDate.isSameDate(DateTime.now())) {
         if (pickedTime.hour < now.hour || (pickedTime.hour == now.hour && pickedTime.minute < now.minute)) {
-          showSnackBar(context, 'Please select a time later than the current time.');
+          showSnackBar(context, 'Please select a time later than the current time.', errorColor);
           return;
         }
       }
@@ -152,7 +152,7 @@ class _AddTaskState extends State<AddTask>{
       try {
         DocumentReference taskRef = await taskAdd.addToFirestore();
         String taskId = taskRef.id;
-        showSnackBar(context, "Task successfully added!");
+        showSnackBar(context, "Task successfully added!", primaryColor);
         Navigator.pop(context);
         Navigator.pushReplacement<void, void>(
           context,
@@ -293,7 +293,7 @@ class _AddTaskState extends State<AddTask>{
                     maxLength: 30,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        showSnackBar(context, 'Please enter a title.');
+                        showSnackBar(context, 'Please enter a title.', errorColor);
                         return '';
                       }
                       return null;

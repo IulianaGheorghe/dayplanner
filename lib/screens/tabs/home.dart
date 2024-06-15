@@ -301,7 +301,7 @@ class _HomeState extends State<Home>{
             } else {
               await addCategory(controllerText, userID);
               Navigator.of(context).pop();
-              showSnackBar(context, "Category successfully added");
+              showSnackBar(context, "Category successfully added", primaryColor);
               setError(null);
               _handleCategories();
             }
@@ -389,7 +389,7 @@ class _HomeState extends State<Home>{
                       await deleteSelectedCategories();
                       _handleCategories();
                       Navigator.of(context).pop();
-                      showSnackBar(context, "Categories successfully deleted");
+                      showSnackBar(context, "Categories successfully deleted", primaryColor);
                     }
                   },
                   child: const Text(
