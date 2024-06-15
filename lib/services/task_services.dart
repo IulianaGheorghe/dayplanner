@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dayplanner/util/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 
@@ -89,6 +90,27 @@ class Task {
   }
 }
 
+Future<void> cancelNotification(String userID, String taskID, String formattedDate) async {
+  try {
+    DocumentSnapshot taskSnapshot = await _firestore.collection("users")
+        .doc(userID)
+        .collection("tasks")
+        .doc(formattedDate)
+        .collection("day tasks")
+        .doc(taskID)
+        .get();
+
+    if (taskSnapshot.exists && (taskSnapshot.data() as Map<String, dynamic>).containsKey('notificationIDs')) {
+      List notificationIDs = taskSnapshot['notificationIDs'];
+      for (var id in notificationIDs) {
+        await FlutterLocalNotificationsPlugin().cancel(id);
+      }
+    }
+  } catch (e) {
+    throw Exception('Error canceling notifications: $e');
+  }
+}
+
 Future<void> deleteTask(String userID, String taskID, String formattedDate, String categoryName) async{
   String categoryID = await getCategoryId(userID, categoryName);
   Future<void> updateTaskCountFromTasks() async {
@@ -119,7 +141,9 @@ Future<void> deleteTask(String userID, String taskID, String formattedDate, Stri
         .doc(taskIdFromCategory)
         .delete();
   }
+
   try {
+    await cancelNotification(userID, taskID, formattedDate);
     await updateTaskCountFromTasks();
     await deleteTaskReferenceFromCategories();
     await updateTaskCountFromCategories();

@@ -94,7 +94,7 @@ class _AddTaskState extends State<AddTask>{
 
     if (pickedTime != null) {
       if (_selectedDate.isSameDate(DateTime.now())) {
-        if (pickedTime.hour < now.hour || (pickedTime.hour == now.hour && pickedTime.minute < now.minute)) {
+        if (pickedTime.hour < now.hour || (pickedTime.hour == now.hour && pickedTime.minute <= now.minute)) {
           showSnackBar(context, 'Please select a time later than the current time.');
           return;
         }
@@ -155,7 +155,10 @@ class _AddTaskState extends State<AddTask>{
           ),
         );
 
+        var notificationIDs = [];
+
         if (_selectedStartTime != null) {
+          notificationIDs.add(taskAdd.hashCode + Random().nextInt(1000));
           DateTime startTime = DateTime(
               _selectedDate.year,
               _selectedDate.month,
@@ -164,16 +167,17 @@ class _AddTaskState extends State<AddTask>{
               _selectedStartTime!.minute
           );
           _notificationService.showScheduledNotification(
-            id: taskAdd.hashCode + Random().nextInt(1000),
+            id: notificationIDs.last,
             title: _title,
             body: 'Your task $_title starts now',
             scheduledDate: startTime,);
 
           if (_selectedRemindersStart != []) {
             for (var reminder in _selectedRemindersStart) {
+              notificationIDs.add(taskAdd.hashCode + Random().nextInt(1000));
               DateTime notificationTime = startTime.subtract(Duration(minutes: reminder));
               _notificationService.showScheduledNotification(
-                id: taskAdd.hashCode + Random().nextInt(1000),
+                id: notificationIDs.last,
                 title: 'Task Reminder',
                 body: reminder >= 1440
                     ? 'Your task $_title starts in ${reminder ~/ 1440} day(s)'
@@ -186,6 +190,7 @@ class _AddTaskState extends State<AddTask>{
         }
 
         if (_selectedDeadline != null) {
+          notificationIDs.add(taskAdd.hashCode + Random().nextInt(1000));
           String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
           DateTime deadlineTime = DateTime(
             _selectedDate.year,
@@ -195,7 +200,7 @@ class _AddTaskState extends State<AddTask>{
             _selectedDeadline!.minute,
           );
           _notificationService.showScheduledNotificationWithActions(
-            id: taskAdd.hashCode + Random().nextInt(1000),
+            id: notificationIDs.last,
             title: 'Your task $_title is due now',
             body: 'Would you like to mark it as done?',
             scheduledDate: deadlineTime,
@@ -216,9 +221,10 @@ class _AddTaskState extends State<AddTask>{
 
           if (_selectedRemindersDeadline != []) {
             for (var reminder in _selectedRemindersDeadline) {
+              notificationIDs.add(taskAdd.hashCode + Random().nextInt(1000));
               DateTime notificationTime = deadlineTime.subtract(Duration(minutes: reminder));
               _notificationService.showScheduledNotification(
-                id: taskAdd.hashCode + Random().nextInt(1000),
+                id: notificationIDs.last,
                 title: 'Task Deadline Reminder',
                 body: reminder >= 60
                   ? 'Your task $_title deadline is in ${reminder ~/ 60} hour(s)'
@@ -226,6 +232,10 @@ class _AddTaskState extends State<AddTask>{
                 scheduledDate: notificationTime,);
             }
           }
+        }
+
+        if (notificationIDs.isNotEmpty) {
+          await taskRef.update({'notificationIDs': notificationIDs});
         }
       } catch (e) {
         throw Exception('Error adding task to db: $e');

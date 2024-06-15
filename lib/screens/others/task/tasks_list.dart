@@ -104,7 +104,10 @@ class _TasksListState extends State<TasksList> {
         tasksData.sort((a, b) {
           int priorityComparison = getPriorityValue(a['priority']).compareTo(getPriorityValue(b['priority']));
           if (priorityComparison == 0) {
-            return compareTimeOfDay(a['startTime'], b['startTime']);
+            var timeOfDayComparison = compareTimeOfDay(a['startTime'], b['startTime']);
+            return timeOfDayComparison == 0
+                ? compareTimeOfDay(a['deadline'], b['deadline'])
+                : timeOfDayComparison;
           }
           return priorityComparison;
         });
