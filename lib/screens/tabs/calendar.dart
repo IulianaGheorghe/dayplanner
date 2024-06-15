@@ -1,9 +1,11 @@
+import 'package:dayplanner/screens/others/task/add_task.dart';
 import 'package:dayplanner/util/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+import '../../common_widgets/showSnackBar.dart';
 import '../../services/task_services.dart';
 import '../others/task/tasks_list.dart';
 
@@ -158,6 +160,25 @@ class _CalendarState extends State<Calendar>{
              ),
             ],
           ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              _selectedDay.isAfter(DateTime.now().subtract(const Duration(days: 1)))
+                  ? Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AddTask(date: _selectedDay, index: 1)),
+                    )
+                  : showSnackBar(context, "You can't add a task for a past date.");
+            },
+            backgroundColor: primaryColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30.0),
+            ),
+            child: const Icon(
+              Icons.add,
+              size: 33,
+            ),
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         ),
     );
   }

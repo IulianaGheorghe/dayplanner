@@ -92,7 +92,7 @@ class _HomeState extends State<Home>{
                               child: ElevatedButton(
                                 onPressed: () {
                                   Navigator.push(context,
-                                      MaterialPageRoute(builder: (context) => const AddTask()));
+                                      MaterialPageRoute(builder: (context) => AddTask(date: DateTime.now(), index: 0)));
                                 },
                                 style: ElevatedButton.styleFrom(
                                     shape: const StadiumBorder(),

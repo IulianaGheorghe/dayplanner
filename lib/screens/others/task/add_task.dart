@@ -22,7 +22,9 @@ import '../../../util/constants.dart';
 import '../../../util/notification_service.dart';
 
 class AddTask extends StatefulWidget{
-  const AddTask({super.key});
+  final DateTime date;
+  final int index;
+  const AddTask({super.key, required this.date, required this.index});
 
   @override
   State<AddTask> createState() => _AddTaskState();
@@ -30,9 +32,10 @@ class AddTask extends StatefulWidget{
 
 class _AddTaskState extends State<AddTask>{
   final _formKey = GlobalKey<FormState>();
+  late int _navigatorIndex;
   String _title = '';
   String _description = '';
-  DateTime _selectedDate = DateTime.now();
+  late DateTime _selectedDate;
   TimeOfDay? _selectedStartTime;
   TimeOfDay? _selectedDeadline;
   LatLng? _selectedDestination;
@@ -55,6 +58,9 @@ class _AddTaskState extends State<AddTask>{
   @override
   void initState() {
     super.initState();
+
+    _selectedDate = widget.date;
+    _navigatorIndex = widget.index;
 
     User? user = FirebaseAuth.instance.currentUser;
     userID = user!.uid;
@@ -151,7 +157,7 @@ class _AddTaskState extends State<AddTask>{
         Navigator.pushReplacement<void, void>(
           context,
           MaterialPageRoute<void>(
-            builder: (BuildContext context) => const MyBottomNavigationBar(index: 0),
+            builder: (BuildContext context) => MyBottomNavigationBar(index: _navigatorIndex),
           ),
         );
 
