@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dayplanner/util/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 
@@ -21,7 +22,7 @@ class Task {
 
   Task(this.userID, this.title, this.description, this.category, this.date, this.startTime, this.deadline, this.priority, this.destination, this.status, this.createdAt);
 
-  Future<void> addToFirestore() async {
+  Future<DocumentReference> addToFirestore() async {
     String formattedDate = DateFormat('yyyy-MM-dd').format(date);
 
     try {
@@ -81,10 +82,32 @@ class Task {
           int incrementedValue2 = currentNoOfTasks2 + 1;
           await documentRef2.update({'tasksCount': incrementedValue2});
         }
+        return newTaskRef;
       }
     } catch (e) {
       throw Exception('Task cannot be added to firebase.');
     }
+  }
+}
+
+Future<void> cancelNotification(String userID, String taskID, String formattedDate) async {
+  try {
+    DocumentSnapshot taskSnapshot = await _firestore.collection("users")
+        .doc(userID)
+        .collection("tasks")
+        .doc(formattedDate)
+        .collection("day tasks")
+        .doc(taskID)
+        .get();
+
+    if (taskSnapshot.exists && (taskSnapshot.data() as Map<String, dynamic>).containsKey('notificationIDs')) {
+      List notificationIDs = taskSnapshot['notificationIDs'];
+      for (var id in notificationIDs) {
+        await FlutterLocalNotificationsPlugin().cancel(id);
+      }
+    }
+  } catch (e) {
+    throw Exception('Error canceling notifications: $e');
   }
 }
 
@@ -118,7 +141,9 @@ Future<void> deleteTask(String userID, String taskID, String formattedDate, Stri
         .doc(taskIdFromCategory)
         .delete();
   }
+
   try {
+    await cancelNotification(userID, taskID, formattedDate);
     await updateTaskCountFromTasks();
     await deleteTaskReferenceFromCategories();
     await updateTaskCountFromCategories();

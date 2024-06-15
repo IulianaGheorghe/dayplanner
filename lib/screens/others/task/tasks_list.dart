@@ -2,7 +2,6 @@ import 'package:dayplanner/screens/others/task/task_details.dart';
 import 'package:dayplanner/services/task_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../../util/components.dart';
 import '../../../util/constants.dart';
@@ -61,6 +60,16 @@ class _TasksListState extends State<TasksList> {
     }
   }
 
+  // void markTaskAsDone(String userId, String taskId, String formattedDate) async{
+  //   int index = tasksData.indexWhere((task) => task['id'] == taskId);
+  //   if (index != -1) {
+  //     tasksData[index]['status'] = 'Done';
+  //     await updateStatus(userId, taskId, formattedDate, 'Done');
+  //     setState(() {});
+  //   }
+  //   taskStatusUpdateService.notifyTaskUpdated();
+  // }
+
   int getPriorityValue(String priority) {
     switch (priority) {
       case 'High':
@@ -95,13 +104,24 @@ class _TasksListState extends State<TasksList> {
         tasksData.sort((a, b) {
           int priorityComparison = getPriorityValue(a['priority']).compareTo(getPriorityValue(b['priority']));
           if (priorityComparison == 0) {
-            return compareTimeOfDay(a['startTime'], b['startTime']);
+            var timeOfDayComparison = compareTimeOfDay(a['startTime'], b['startTime']);
+            return timeOfDayComparison == 0
+                ? compareTimeOfDay(a['deadline'], b['deadline'])
+                : timeOfDayComparison;
           }
           return priorityComparison;
         });
-      } else {
+      } else if (widget.sortingType == 'Sort by Start Time') {
         tasksData.sort((a, b) {
           int timeComparison = compareTimeOfDay(a['startTime'], b['startTime']);
+          if (timeComparison == 0) {
+            return getPriorityValue(a['priority']).compareTo(getPriorityValue(b['priority']));
+          }
+          return timeComparison;
+        });
+      } else {
+        tasksData.sort((a, b) {
+          int timeComparison = compareTimeOfDay(a['deadline'], b['deadline']);
           if (timeComparison == 0) {
             return getPriorityValue(a['priority']).compareTo(getPriorityValue(b['priority']));
           }
@@ -118,9 +138,6 @@ class _TasksListState extends State<TasksList> {
 
   @override
   Widget build(BuildContext context) {
-    final todayDate = DateTime.now();
-    String formattedDate = DateFormat('yyyy-MM-dd').format(todayDate);
-
     return ListView.builder(
       itemCount: tasksData.length,
       itemBuilder: (context, index) {
@@ -146,11 +163,17 @@ class _TasksListState extends State<TasksList> {
                   ),
                 ),
                 onDismissed: (direction) async {
+                  final taskToDelete = tasksData[index];
                   setState(() {
                     tasksData.removeAt(index);
                     isTaskDeleting = true;
                   });
-                  await deleteTask(userID!, task['id'], formattedDate, task['category']);
+                  await deleteTask(
+                      userID!,
+                      taskToDelete['id'],
+                      DateFormat('yyyy-MM-dd').format(task['date']),
+                      taskToDelete['category']
+                  );
                   setState(() {
                     isTaskDeleting = false;
                   });
@@ -203,12 +226,14 @@ class _TasksListState extends State<TasksList> {
                                   title: Text(task['title'],
                                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
                                   subtitle: widget.onCalendarPage
+                                      ? Text(DateFormat('EEEE, d MMMM').format(task['date']))
+                                      : null,
+                                  trailing: widget.onCalendarPage
                                       ? null
-                                      : Text(DateFormat('EEEE, d MMMM').format(task['date'])),
-                                  trailing: Transform.scale(
+                                      : Transform.scale(
                                     scale: 1.5,
                                     child: Checkbox(
-                                      checkColor: Colors.greenAccent,
+                                      checkColor: Colors.white,
                                       activeColor: primaryColor,
                                       shape: const CircleBorder(),
                                       value: isChecked,
@@ -218,7 +243,11 @@ class _TasksListState extends State<TasksList> {
                                             task['status'] = (isChecked == true)
                                                 ? 'Done'
                                                 : 'To do';
-                                            updateStatus(userID!, task['id'], formattedDate, task['status']);
+                                            updateStatus(
+                                                userID!, task['id'],
+                                                DateFormat('yyyy-MM-dd').format(task['date']),
+                                                task['status']
+                                            );
                                           }),
                                     ),
                                   ),
@@ -233,10 +262,12 @@ class _TasksListState extends State<TasksList> {
                                       ),
                                       Row(
                                         children: [
-                                          task['startTime'] != null ?
-                                            Text("Start time: ${task['startTime'].hour}:${task['startTime'].minute}")
+                                          task['startTime'] != null
+                                            ? Row(children: [
+                                              Text("Start time: ${task['startTime'].hour}:${task['startTime'].minute}"),
+                                              const SizedBox(width: 32),
+                                            ],)
                                             : const Text(""),
-                                          const SizedBox(width: 32),
                                           task['deadline'] != null ?
                                             Text("Deadline: ${task['deadline'].hour}:${task['deadline'].minute}")
                                             : const Text(""),

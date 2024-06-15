@@ -248,7 +248,7 @@ class _HomeState extends State<Home>{
                         ),
                       ),
                       value: _chooseTaskSorting,
-                      items: ['Sort by Priority', 'Sort by Start Time'].map(
+                      items: ['Sort by Priority', 'Sort by Start Time', 'Sort by Deadline'].map(
                             (sortingOption) =>
                             DropdownMenuItem(
                               value: sortingOption,
@@ -270,6 +270,7 @@ class _HomeState extends State<Home>{
                       },
                     ),
                   ),
+                  const SizedBox(height: 5),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(right: 10),
@@ -311,7 +312,9 @@ class _HomeState extends State<Home>{
   }
 
   void _showDeleteCategoryDialog() {
-    Map<String, bool> selectedCategories = {for (var category in _categoriesList) category: false};
+    List<String> categorieslist = _categoriesList;
+    categorieslist.remove('All');
+    Map<String, bool> selectedCategories = {for (var category in categorieslist) category: false};
     String? errorMessage;
 
     Future<void> deleteSelectedCategories() async {

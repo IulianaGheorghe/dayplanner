@@ -1,7 +1,16 @@
+import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:intl/intl.dart';
+import 'package:multi_select_flutter/chip_display/multi_select_chip_display.dart';
+import 'package:multi_select_flutter/dialog/multi_select_dialog_field.dart';
+import 'package:multi_select_flutter/util/multi_select_item.dart';
+import 'package:rxdart/rxdart.dart';
+import 'package:timezone/timezone.dart' as tz;
 import '../../../common_widgets/map_screen.dart';
 import '../../../common_widgets/navigationBar.dart';
 import '../../../common_widgets/showSnackBar.dart';
@@ -10,6 +19,7 @@ import '../../../services/task_services.dart';
 import '../../../services/user_services.dart';
 import '../../../util/components.dart';
 import '../../../util/constants.dart';
+import '../../../util/notification_service.dart';
 
 class AddTask extends StatefulWidget{
   const AddTask({super.key});
@@ -32,9 +42,15 @@ class _AddTaskState extends State<AddTask>{
   String _status = "To do";
   String userID = '';
   List categoriesList = [];
+  String choosePriority = "Low";
+  List priorityList = ["Low", "Medium", "High"];
+  String chooseCategory = "No category";
+  List<int> _selectedRemindersStart = [];
+  List<int> _selectedRemindersDeadline = [];
 
   FirebaseAuthMethods authMethods = FirebaseAuthMethods();
   UserServices userServices = UserServices();
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
@@ -69,12 +85,20 @@ class _AddTaskState extends State<AddTask>{
   }
 
   Future<void> _selectStartTime() async {
+    TimeOfDay now = TimeOfDay.now();
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
+      initialEntryMode: TimePickerEntryMode.input,
     );
 
-    if (pickedTime != null && pickedTime != _selectedStartTime) {
+    if (pickedTime != null) {
+      if (_selectedDate.isSameDate(DateTime.now())) {
+        if (pickedTime.hour < now.hour || (pickedTime.hour == now.hour && pickedTime.minute <= now.minute)) {
+          showSnackBar(context, 'Please select a time later than the current time.');
+          return;
+        }
+      }
       setState(() {
         _selectedStartTime = pickedTime;
       });
@@ -82,12 +106,20 @@ class _AddTaskState extends State<AddTask>{
   }
 
   Future<void> _selectDeadline() async {
+    TimeOfDay now = TimeOfDay.now();
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
+      initialEntryMode: TimePickerEntryMode.input,
     );
 
-    if (pickedTime != null && pickedTime != _selectedDeadline) {
+    if (pickedTime != null) {
+      if (_selectedDate.isSameDate(DateTime.now())) {
+        if (pickedTime.hour < now.hour || (pickedTime.hour == now.hour && pickedTime.minute < now.minute)) {
+          showSnackBar(context, 'Please select a time later than the current time.');
+          return;
+        }
+      }
       setState(() {
         _selectedDeadline = pickedTime;
       });
@@ -112,7 +144,8 @@ class _AddTaskState extends State<AddTask>{
         DateTime.now(),
       );
       try {
-        await taskAdd.addToFirestore();
+        DocumentReference taskRef = await taskAdd.addToFirestore();
+        String taskId = taskRef.id;
         showSnackBar(context, "Task successfully added!");
         Navigator.pop(context);
         Navigator.pushReplacement<void, void>(
@@ -121,15 +154,94 @@ class _AddTaskState extends State<AddTask>{
             builder: (BuildContext context) => const MyBottomNavigationBar(index: 0),
           ),
         );
+
+        var notificationIDs = [];
+
+        if (_selectedStartTime != null) {
+          notificationIDs.add(taskAdd.hashCode + Random().nextInt(1000));
+          DateTime startTime = DateTime(
+              _selectedDate.year,
+              _selectedDate.month,
+              _selectedDate.day,
+              _selectedStartTime!.hour,
+              _selectedStartTime!.minute
+          );
+          _notificationService.showScheduledNotification(
+            id: notificationIDs.last,
+            title: _title,
+            body: 'Your task $_title starts now',
+            scheduledDate: startTime,);
+
+          if (_selectedRemindersStart != []) {
+            for (var reminder in _selectedRemindersStart) {
+              notificationIDs.add(taskAdd.hashCode + Random().nextInt(1000));
+              DateTime notificationTime = startTime.subtract(Duration(minutes: reminder));
+              _notificationService.showScheduledNotification(
+                id: notificationIDs.last,
+                title: 'Task Reminder',
+                body: reminder >= 1440
+                    ? 'Your task $_title starts in ${reminder ~/ 1440} day(s)'
+                    : reminder >= 60
+                      ? 'Your task $_title starts in ${reminder ~/ 60} hour(s)'
+                      : 'Your task $_title starts in $reminder minutes',
+                scheduledDate: notificationTime,);
+            }
+          }
+        }
+
+        if (_selectedDeadline != null) {
+          notificationIDs.add(taskAdd.hashCode + Random().nextInt(1000));
+          String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+          DateTime deadlineTime = DateTime(
+            _selectedDate.year,
+            _selectedDate.month,
+            _selectedDate.day,
+            _selectedDeadline!.hour,
+            _selectedDeadline!.minute,
+          );
+          _notificationService.showScheduledNotificationWithActions(
+            id: notificationIDs.last,
+            title: 'Your task $_title is due now',
+            body: 'Would you like to mark it as done?',
+            scheduledDate: deadlineTime,
+            actions: <AndroidNotificationAction>[
+              const AndroidNotificationAction(
+                'yes_action',
+                'Yes',
+                showsUserInterface: false,
+              ),
+              const AndroidNotificationAction(
+                'no_action',
+                'No',
+                showsUserInterface: false,
+              ),
+            ],
+            payload: '$userID|$taskId|$formattedDate',
+          );
+
+          if (_selectedRemindersDeadline != []) {
+            for (var reminder in _selectedRemindersDeadline) {
+              notificationIDs.add(taskAdd.hashCode + Random().nextInt(1000));
+              DateTime notificationTime = deadlineTime.subtract(Duration(minutes: reminder));
+              _notificationService.showScheduledNotification(
+                id: notificationIDs.last,
+                title: 'Task Deadline Reminder',
+                body: reminder >= 60
+                  ? 'Your task $_title deadline is in ${reminder ~/ 60} hour(s)'
+                  : 'Your task $_title deadline is in $reminder minutes',
+                scheduledDate: notificationTime,);
+            }
+          }
+        }
+
+        if (notificationIDs.isNotEmpty) {
+          await taskRef.update({'notificationIDs': notificationIDs});
+        }
       } catch (e) {
         throw Exception('Error adding task to db: $e');
       }
     }
   }
-
-  String choosePriority = "Low";
-  List priorityList = ["Low", "Medium", "High"];
-  String chooseCategory = "No category";
 
   @override
   Widget build(BuildContext context) {
@@ -166,10 +278,11 @@ class _AddTaskState extends State<AddTask>{
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 16),
-                  titleStyle("Task Title", secondaryTitleSize),
+                  titleStyle("Task Title*", secondaryTitleSize),
                   const SizedBox(height: 16),
                   TextFormField(
                     decoration: addPageInputStyle("Enter Task Name"),
+                    textCapitalization: TextCapitalization.sentences,
                     cursorColor: inputDecorationColor,
                     maxLength: 30,
                     validator: (value) {
@@ -188,6 +301,7 @@ class _AddTaskState extends State<AddTask>{
                   const SizedBox(height: 16),
                   TextFormField(
                     decoration: addPageInputStyle("Enter Task Description"),
+                    textCapitalization: TextCapitalization.sentences,
                     cursorColor: inputDecorationColor,
                     keyboardType: TextInputType.multiline,
                     maxLines: 5,
@@ -308,6 +422,56 @@ class _AddTaskState extends State<AddTask>{
                       ),
                     ],
                   ),
+                  if (_selectedStartTime != null) ...[
+                    const SizedBox(height: 16),
+                    titleStyle('Reminders before Start Time', secondaryTitleSize),
+                    const SizedBox(height: 16),
+                    MultiSelectDialogField(
+                      items: [
+                        MultiSelectItem(5, '5 minutes before'),
+                        MultiSelectItem(10, '10 minutes before'),
+                        MultiSelectItem(15, '15 minutes before'),
+                        MultiSelectItem(30, '30 minutes before'),
+                        MultiSelectItem(60, '1 hour before'),
+                        MultiSelectItem(120, '2 hours before'),
+                        MultiSelectItem(180, '3 hours before'),
+                        MultiSelectItem(360, '6 hours before'),
+                        MultiSelectItem(540, '9 hours before'),
+                        MultiSelectItem(720, '12 hours before'),
+                        MultiSelectItem(1440, '1 day before'),
+                        MultiSelectItem(2880, '2 days before'),
+                      ],
+                      title: titleStyle('Choose reminders', secondaryTitleSize),
+                      selectedColor: primaryColor,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      buttonIcon: Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.grey.shade700,
+                      ),
+                      buttonText: const Text(
+                        'Select reminders',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                          fontSize: 16,
+                        ),
+                      ),
+                      chipDisplay: MultiSelectChipDisplay(
+                        chipColor: Colors.grey.shade200,
+                        textStyle: const TextStyle(
+                          color: primaryColor,
+                        ),
+                      ),
+                      onConfirm: (results) {
+                        setState(() {
+                          _selectedRemindersStart = results.cast<int>();
+                        });
+                      },
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -397,6 +561,58 @@ class _AddTaskState extends State<AddTask>{
                       ),
                     ],
                   ),
+                  if (_selectedDeadline != null) ...[
+                    const SizedBox(height: 16),
+                    titleStyle('Reminders before Deadline', secondaryTitleSize),
+                    const SizedBox(height: 16),
+                    MultiSelectDialogField(
+                      items: [
+                        MultiSelectItem(5, '5 minutes before'),
+                        MultiSelectItem(10, '10 minutes before'),
+                        MultiSelectItem(15, '15 minutes before'),
+                        MultiSelectItem(20, '20 minutes before'),
+                        MultiSelectItem(25, '25 minutes before'),
+                        MultiSelectItem(30, '30 minutes before'),
+                        MultiSelectItem(40, '40 minutes before'),
+                        MultiSelectItem(50, '50 minutes before'),
+                        MultiSelectItem(60, '1 hour before'),
+                        MultiSelectItem(120, '2 hours before'),
+                        MultiSelectItem(180, '3 hours before'),
+                        MultiSelectItem(240, '4 hours before'),
+                        MultiSelectItem(300, '5 hours before'),
+                        MultiSelectItem(360, '6 hours before'),
+                      ],
+                      title: titleStyle('Choose reminders', secondaryTitleSize),
+                      selectedColor: primaryColor,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      buttonIcon: Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.grey.shade700,
+                      ),
+                      buttonText: const Text(
+                        'Select reminders',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                          fontSize: 16,
+                        ),
+                      ),
+                      chipDisplay: MultiSelectChipDisplay(
+                        chipColor: Colors.grey.shade200,
+                        textStyle: const TextStyle(
+                          color: primaryColor,
+                        ),
+                      ),
+                      onConfirm: (results) {
+                        setState(() {
+                          _selectedRemindersDeadline = results.cast<int>();
+                        });
+                      },
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   titleStyle('Add destination', secondaryTitleSize),
                   const SizedBox(height: 16),
@@ -471,5 +687,10 @@ class _AddTaskState extends State<AddTask>{
 
   String formatTime(TimeOfDay time) {
     return '${time.hour}:${time.minute}';
+  }
+}
+extension DateUtils on DateTime {
+  bool isSameDate(DateTime other) {
+    return year == other.year && month == other.month && day == other.day;
   }
 }

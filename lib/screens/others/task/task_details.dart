@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../util/constants.dart';
+
 
 class TaskDetails extends StatelessWidget{
   final String title;
@@ -176,27 +178,44 @@ class TaskDetails extends StatelessWidget{
                 ),
                 const SizedBox(height: 16),
                 if (destination != null)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.shade300,
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
+                  GestureDetector(
+                    onTap: () {
+                      launchGoogleMaps(destination!.latitude, destination!.longitude);
+                    },
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(20.0),
+                          child: Image.asset(
+                            'assets/images/location.jpg',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          top: 40,
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width / 1.3,
+                            child: const Text(
+                              'View Route to Destination in Google Maps',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 21.0,
+                                fontWeight: FontWeight.w900,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        ),
+                        const Positioned(
+                          bottom: 25,
+                          child: Icon(
+                            Icons.touch_app,
+                            color: Colors.white,
+                            size: 48.0,
+                          ),
                         ),
                       ],
-                    ),
-                    child: ListTile(
-                      title: const Text(
-                        'Destination',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      subtitle: Text(
-                        'Lat: ${destination!.latitude}, Long: ${destination!.longitude}',
-                        style: const TextStyle(fontSize: 18),
-                      ),
                     ),
                   ),
               ],
@@ -205,5 +224,18 @@ class TaskDetails extends StatelessWidget{
         ],
       ),
     );
+  }
+
+  void launchGoogleMaps(double destinationLat, double destinationLng) async {
+    final Uri url = Uri.https('www.google.com', '/maps/dir/', {
+      'api': '1',
+      'destination': '$destinationLat,$destinationLng'
+    });
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 }
