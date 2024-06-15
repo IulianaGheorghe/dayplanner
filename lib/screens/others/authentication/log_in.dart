@@ -2,8 +2,6 @@ import 'package:dayplanner/screens/others/authentication/reset_password.dart';
 import 'package:dayplanner/screens/others/authentication/sign_up.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-
-import '../../../common_widgets/navigationBar.dart';
 import '../../../services/auth_methods.dart';
 import '../../../util/components.dart';
 import '../../../util/constants.dart';
@@ -96,13 +94,7 @@ class _LogInState extends State<LogIn>{
                     ElevatedButton(
                       key: const Key("logInButton"),
                       onPressed: () async {
-                        try {
-                          await _handleLogIn();
-                          Navigator.push(context,
-                                MaterialPageRoute(builder: (context) => const MyBottomNavigationBar(index: 0)));
-                        } catch (e) {
-                          throw Exception('Error logging the user: $e');
-                        }
+                        await _handleLogIn();
                       },
                       style: ElevatedButton.styleFrom(
                           shape: const StadiumBorder(),

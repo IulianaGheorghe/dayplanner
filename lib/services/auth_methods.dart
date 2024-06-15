@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:nanoid/nanoid.dart';
 
+import '../common_widgets/navigationBar.dart';
 import '../common_widgets/showSnackBar.dart';
 
 class FirebaseAuthMethods {
@@ -31,35 +32,37 @@ class FirebaseAuthMethods {
     await Firebase.initializeApp();
 
     if (await doesUserExist(email)) {
-      showSnackBar(context, 'An user with same email already exists!', errorColor);
-      throw Exception('An user with same email already exists!');
-    } else {
-      try {
-        if (password != confirmPassword) {
-          throw Exception('Passwords do not match.');
-        }
-        if (email == '' || name == '' || password == '') {
-          throw Exception('Field cannot be empty.');
-        }
+      showSnackBar(context, 'User with same email already exists!', errorColor);
+      return;
+    }
+    if (password != confirmPassword) {
+      showSnackBar(context, 'Passwords do not match.', errorColor);
+      return;
+    }
+    if (email.isEmpty || name.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      showSnackBar(context, 'Please complete all fields.', errorColor);
+      return;
+    }
+    try {
+      String randomUserId = nanoid(10);
 
-        String randomUserId = nanoid(10);
+      final credentials = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
+      FirebaseFirestore.instance
+        .collection('users')
+        .doc(credentials.user?.uid)
+        .set({
+          'name': name,
+          'email': email,
+          'id': randomUserId,
+          'photo': ''
+        });
 
-        final credentials = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
-        FirebaseFirestore.instance
-          .collection('users')
-          .doc(credentials.user?.uid)
-          .set({
-            'name': name,
-            'email': email,
-            'id': randomUserId,
-            'photo': ''
-          });
+      addInitialCategories(credentials.user!.uid);
 
-        addInitialCategories(credentials.user!.uid);
-      } catch (e) {
-        showSnackBar(context, e.toString(), errorColor);
-        throw Exception('Failed to create user: $e');
-      }
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const MyBottomNavigationBar(index: 0)));
+    } on FirebaseAuthException catch (e) {
+      showSnackBar(context, e.message!, errorColor);
     }
   }
 
@@ -71,14 +74,21 @@ class FirebaseAuthMethods {
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp();
 
+    if (email.isEmpty || password.isEmpty) {
+      showSnackBar(context, 'Please complete all fields.', errorColor);
+      return;
+    }
+
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: email,
           password: password
       );
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const MyBottomNavigationBar(index: 0)));
+
     } on FirebaseAuthException catch (e) {
       showSnackBar(context, e.message!, errorColor);
-      throw Exception('User does not exist!');
     }
   }
 
