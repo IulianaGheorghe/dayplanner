@@ -53,6 +53,7 @@ class _HomeState extends State<Home>{
 
     return MaterialApp(
       home: Scaffold(
+        resizeToAvoidBottomInset: false,
         body: Stack(
           fit: StackFit.expand,
           children: [

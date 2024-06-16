@@ -183,14 +183,17 @@ class _TasksListState extends State<TasksList> {
                     Navigator.push(context, MaterialPageRoute(
                       builder: (context) =>
                           TaskDetails(
-                              title: task['title'],
-                              description: task['description'],
-                              date: task['date'],
-                              startTime: task['startTime'],
-                              deadline: task['deadline'],
-                              priority: task['priority'],
-                              destination: task['destination'],
-                              status: task['status']
+                            title: task['title'],
+                            description: task['description'],
+                            date: task['date'],
+                            startTime: task['startTime'],
+                            deadline: task['deadline'],
+                            priority: task['priority'],
+                            destination: task['destination'],
+                            status: task['status'],
+                            category: task['category'],
+                            notificationIDs: task['notificationIDs'],
+                            id: task['id']
                           ),
                     ),
                     );

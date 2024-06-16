@@ -173,46 +173,6 @@ Future<String> getCategoryId(String userID, String category) async {
   return id;
 }
 
-Future<List<Task>> getTasksForDay(DateTime day, String userID) async {
-  String formattedDate = DateFormat('yyyy-MM-dd').format(day);
-
-  QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore
-      .collection('users')
-      .doc(userID)
-      .collection('tasks')
-      .doc(formattedDate)
-      .collection("day tasks")
-      .get();
-
-  List<Task> tasks = snapshot.docs.map((doc) {
-    Map<String, dynamic> data = doc.data();
-    return Task(
-        userID,
-        data['title'],
-        data['description'],
-        data['category'],
-        doc['date'].toDate(),
-        (doc['startTime'] != '') ?
-          TimeOfDay(hour: int.parse(doc['startTime'].split(':')[0]),
-            minute: int.parse(doc['startTime'].split(':')[1]),
-          ) : null,
-        (doc['deadline'] != '') ?
-          TimeOfDay(hour: int.parse(doc['deadline'].split(':')[0]),
-            minute: int.parse(doc['deadline'].split(':')[1]),
-          ) : null,
-        doc['priority'],
-        (doc['destination'] != '') ?
-          LatLng(double.parse(doc['destination'].split(',')[0]),
-            double.parse(doc['destination'].split(',')[1]),
-          ) : null,
-        doc['status'],
-        (data['createdAt'] as Timestamp).toDate(),
-    );
-  }).toList();
-
-  return tasks;
-}
-
 Future<Map<String, int>> getTasksCountForMonth(DateTime focusedDay, String userID) async {
   DateTime firstDayOfMonth = DateTime(focusedDay.year, focusedDay.month, 1);
   DateTime lastDayOfMonth = DateTime(focusedDay.year, focusedDay.month + 1, 0);
@@ -289,6 +249,9 @@ Future<List<Map<String, dynamic>>> getAllTasks(String userID, String date) async
           )
               : null,
           'status': doc['status'],
+          'notificationIDs': doc.data().containsKey('notificationIDs')
+              ? doc['notificationIDs']
+              : [],
         };
       }).toList();
     }
@@ -339,6 +302,9 @@ Future<List<Map<String, dynamic>>> getTasksByCategory(String userID, String cate
           )
               : null,
           'status': doc['status'],
+          'notificationIDs': doc.data().containsKey('notificationIDs')
+              ? doc['notificationIDs']
+              : [],
         };
       }).toList();
     }

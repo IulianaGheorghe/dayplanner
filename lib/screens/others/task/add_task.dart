@@ -167,7 +167,8 @@ class _AddTaskState extends State<AddTask>{
         var notificationIDs = [];
 
         if (_selectedStartTime != null) {
-          notificationIDs.add(taskAdd.hashCode + Random().nextInt(1000));
+          var uniqueId = (taskAdd.hashCode*1000 + Random().nextInt(1000)) & 0x7FFFFFFF;
+          notificationIDs.add(uniqueId);
           DateTime startTime = DateTime(
               _selectedDate.year,
               _selectedDate.month,
@@ -183,7 +184,8 @@ class _AddTaskState extends State<AddTask>{
 
           if (_selectedRemindersStart != []) {
             for (var reminder in _selectedRemindersStart) {
-              notificationIDs.add(taskAdd.hashCode + Random().nextInt(1000));
+              var uniqueId = (taskAdd.hashCode*1000 + Random().nextInt(1000)) & 0x7FFFFFFF;
+              notificationIDs.add(uniqueId);
               DateTime notificationTime = startTime.subtract(Duration(minutes: reminder));
               _notificationService.showScheduledNotification(
                 id: notificationIDs.last,
@@ -199,7 +201,8 @@ class _AddTaskState extends State<AddTask>{
         }
 
         if (_selectedDeadline != null) {
-          notificationIDs.add(taskAdd.hashCode + Random().nextInt(1000));
+          var uniqueId = (taskAdd.hashCode*1000 + Random().nextInt(1000)) & 0x7FFFFFFF;
+          notificationIDs.add(uniqueId);
           String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
           DateTime deadlineTime = DateTime(
             _selectedDate.year,
@@ -230,7 +233,8 @@ class _AddTaskState extends State<AddTask>{
 
           if (_selectedRemindersDeadline != []) {
             for (var reminder in _selectedRemindersDeadline) {
-              notificationIDs.add(taskAdd.hashCode + Random().nextInt(1000));
+              var uniqueId = (taskAdd.hashCode*1000 + Random().nextInt(1000)) & 0x7FFFFFFF;
+              notificationIDs.add(uniqueId);
               DateTime notificationTime = deadlineTime.subtract(Duration(minutes: reminder));
               _notificationService.showScheduledNotification(
                 id: notificationIDs.last,
@@ -255,6 +259,7 @@ class _AddTaskState extends State<AddTask>{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: BackButton(
           onPressed: () {

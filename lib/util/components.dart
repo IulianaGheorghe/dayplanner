@@ -54,6 +54,29 @@ Text titleStyle(String title, double size) {
   );
 }
 
+Container detailsContainer(String title, String content, TextAlign textAlignment) {
+  return Container(
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.6),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    padding: const EdgeInsets.all(10),
+    child: ListTile(
+      title: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Center(
+          child: titleStyle(title, secondaryTitleSize),
+        )
+      ),
+      subtitle: Text(
+        content,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+        textAlign: textAlignment,
+      ),
+    ),
+  );
+}
+
 Color getColorForPriority(String option) {
   switch (option) {
     case 'Low':

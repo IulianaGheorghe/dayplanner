@@ -49,6 +49,7 @@ class _FriendsState extends State<Friends> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           backgroundColor: friendsPageColor,
           centerTitle: true,

@@ -9,9 +9,10 @@ import 'package:nominatim_flutter/nominatim_flutter.dart';
 import '../../util/constants.dart';
 
 class MapScreen extends StatefulWidget {
+  final LatLng? initialLocation;
   final Function(LatLng) onLocationSelected;
 
-  const MapScreen({Key? key, required this.onLocationSelected}) : super(key: key);
+  const MapScreen({super.key, required this.onLocationSelected, this.initialLocation});
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -29,6 +30,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
+    _markers.add(widget.initialLocation as Marker);
     _searchController = TextEditingController();
     _checkLocationService();
   }

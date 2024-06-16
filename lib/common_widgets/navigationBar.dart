@@ -10,9 +10,9 @@ import '../screens/tabs/home.dart';
 
 class MyBottomNavigationBar extends StatefulWidget {
   final int index;
-  final DateTime selectedCalendarDate;
+  final DateTime? selectedCalendarDate;
 
-  const MyBottomNavigationBar({super.key, required this.index, required this.selectedCalendarDate});
+  const MyBottomNavigationBar({super.key, required this.index, this.selectedCalendarDate});
 
   @override
   State<MyBottomNavigationBar> createState() => _MyBottomNavigationBarState();
@@ -22,10 +22,14 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
   String userID = '';
   late int index;
   bool isLoading = false;
+  DateTime _selectedCalendarDay = DateTime.now();
 
   @override
   void initState() {
     super.initState();
+    if (widget.selectedCalendarDate != null) {
+      _selectedCalendarDay = widget.selectedCalendarDate!;
+    }
     User? currentUser = FirebaseAuth.instance.currentUser;
     userID = currentUser!.uid;
     index = widget.index;
@@ -60,12 +64,13 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
   Widget build(BuildContext context) {
     final screens = [
       const Home(),
-      Calendar(selectedDay: widget.selectedCalendarDate,),
+      Calendar(selectedDay: _selectedCalendarDay),
       const Friends(),
       Account(userID: userID),
     ];
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           screens[index],

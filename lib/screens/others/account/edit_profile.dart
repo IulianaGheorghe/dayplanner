@@ -120,7 +120,7 @@ class _EditProfileState extends State<EditProfile>{
       Navigator.pop(context);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => MyBottomNavigationBar(index: 3, selectedCalendarDate: DateTime.now(),)),
+        MaterialPageRoute(builder: (context) => MyBottomNavigationBar(index: 3)),
       );
     } catch (e) {
       throw Exception('Error updating account details: $e');
