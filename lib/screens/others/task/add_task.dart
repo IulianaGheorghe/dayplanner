@@ -50,6 +50,8 @@ class _AddTaskState extends State<AddTask>{
   String chooseCategory = "No category";
   List<int> _selectedRemindersStart = [];
   List<int> _selectedRemindersDeadline = [];
+  Map<String, int> _startTimeReminders = {};
+  Map<String, int> _deadlineReminders = {};
 
   FirebaseAuthMethods authMethods = FirebaseAuthMethods();
   UserServices userServices = UserServices();
@@ -135,6 +137,7 @@ class _AddTaskState extends State<AddTask>{
   void _submitForm() async {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+
       String userID = await userServices.getUserId();
       final taskAdd = Task(
         userID,
@@ -164,11 +167,9 @@ class _AddTaskState extends State<AddTask>{
           ),
         );
 
-        var notificationIDs = [];
-
+        int timestamp = DateTime.now().millisecondsSinceEpoch;
         if (_selectedStartTime != null) {
-          var uniqueId = (taskAdd.hashCode*1000 + Random().nextInt(1000)) & 0x7FFFFFFF;
-          notificationIDs.add(uniqueId);
+          var uniqueId = (timestamp*1000 + Random().nextInt(1000)) & 0x7FFFFFFF;
           DateTime startTime = DateTime(
               _selectedDate.year,
               _selectedDate.month,
@@ -176,33 +177,33 @@ class _AddTaskState extends State<AddTask>{
               _selectedStartTime!.hour,
               _selectedStartTime!.minute
           );
+          _startTimeReminders['0'] = uniqueId;
           _notificationService.showScheduledNotification(
-            id: notificationIDs.last,
+            id: uniqueId,
             title: _title,
             body: 'Your task $_title starts now',
             scheduledDate: startTime,);
 
           if (_selectedRemindersStart != []) {
             for (var reminder in _selectedRemindersStart) {
-              var uniqueId = (taskAdd.hashCode*1000 + Random().nextInt(1000)) & 0x7FFFFFFF;
-              notificationIDs.add(uniqueId);
+              var uniqueId = (timestamp*1000 + Random().nextInt(1000)) & 0x7FFFFFFF;
               DateTime notificationTime = startTime.subtract(Duration(minutes: reminder));
+              _startTimeReminders['$reminder'] = uniqueId;
               _notificationService.showScheduledNotification(
-                id: notificationIDs.last,
+                id: uniqueId,
                 title: 'Task Reminder',
                 body: reminder >= 1440
                     ? 'Your task $_title starts in ${reminder ~/ 1440} day(s)'
                     : reminder >= 60
-                      ? 'Your task $_title starts in ${reminder ~/ 60} hour(s)'
-                      : 'Your task $_title starts in $reminder minutes',
+                    ? 'Your task $_title starts in ${reminder ~/ 60} hour(s)'
+                    : 'Your task $_title starts in $reminder minutes',
                 scheduledDate: notificationTime,);
             }
           }
         }
 
         if (_selectedDeadline != null) {
-          var uniqueId = (taskAdd.hashCode*1000 + Random().nextInt(1000)) & 0x7FFFFFFF;
-          notificationIDs.add(uniqueId);
+          var uniqueId = (timestamp*1000 + Random().nextInt(1000)) & 0x7FFFFFFF;
           String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
           DateTime deadlineTime = DateTime(
             _selectedDate.year,
@@ -211,8 +212,9 @@ class _AddTaskState extends State<AddTask>{
             _selectedDeadline!.hour,
             _selectedDeadline!.minute,
           );
+          _deadlineReminders['0'] = uniqueId;
           _notificationService.showScheduledNotificationWithActions(
-            id: notificationIDs.last,
+            id: uniqueId,
             title: 'Your task $_title is due now',
             body: 'Would you like to mark it as done?',
             scheduledDate: deadlineTime,
@@ -233,22 +235,25 @@ class _AddTaskState extends State<AddTask>{
 
           if (_selectedRemindersDeadline != []) {
             for (var reminder in _selectedRemindersDeadline) {
-              var uniqueId = (taskAdd.hashCode*1000 + Random().nextInt(1000)) & 0x7FFFFFFF;
-              notificationIDs.add(uniqueId);
+              var uniqueId = (timestamp*1000 + Random().nextInt(1000)) & 0x7FFFFFFF;
               DateTime notificationTime = deadlineTime.subtract(Duration(minutes: reminder));
+              _deadlineReminders['$reminder'] = uniqueId;
               _notificationService.showScheduledNotification(
-                id: notificationIDs.last,
+                id: uniqueId,
                 title: 'Task Deadline Reminder',
                 body: reminder >= 60
-                  ? 'Your task $_title deadline is in ${reminder ~/ 60} hour(s)'
-                  : 'Your task $_title deadline is in $reminder minutes',
+                    ? 'Your task $_title deadline is in ${reminder ~/ 60} hour(s)'
+                    : 'Your task $_title deadline is in $reminder minutes',
                 scheduledDate: notificationTime,);
             }
           }
         }
 
-        if (notificationIDs.isNotEmpty) {
-          await taskRef.update({'notificationIDs': notificationIDs});
+        if (_startTimeReminders.isNotEmpty) {
+          await taskRef.update({'startTimeReminders': _startTimeReminders});
+        }
+        if (_deadlineReminders.isNotEmpty) {
+          await taskRef.update({'deadlineReminders': _deadlineReminders});
         }
       } catch (e) {
         throw Exception('Error adding task to db: $e');
@@ -292,7 +297,7 @@ class _AddTaskState extends State<AddTask>{
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 16),
-                  titleStyle("Task Title*", secondaryTitleSize),
+                  titleStyle("Task Title*", secondaryTitleSize, TextAlign.left),
                   const SizedBox(height: 16),
                   TextFormField(
                     decoration: addPageInputStyle("Enter Task Name"),
@@ -311,7 +316,7 @@ class _AddTaskState extends State<AddTask>{
                     },
                   ),
                   const SizedBox(height: 16),
-                  titleStyle("Description", secondaryTitleSize),
+                  titleStyle("Description", secondaryTitleSize, TextAlign.left),
                   const SizedBox(height: 16),
                   TextFormField(
                     decoration: addPageInputStyle("Enter Task Description"),
@@ -327,7 +332,7 @@ class _AddTaskState extends State<AddTask>{
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      titleStyle('Category', secondaryTitleSize),
+                      titleStyle('Category', secondaryTitleSize, TextAlign.left),
                       const SizedBox(height: 16),
                       DropdownButtonFormField(
                         dropdownColor: Colors.grey.shade200,
@@ -375,7 +380,7 @@ class _AddTaskState extends State<AddTask>{
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            titleStyle('Date', secondaryTitleSize),
+                            titleStyle('Date', secondaryTitleSize, TextAlign.left),
                             const SizedBox(height: 16),
                             GestureDetector(
                               onTap: () => _selectDate(),
@@ -407,7 +412,7 @@ class _AddTaskState extends State<AddTask>{
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            titleStyle('Start Time', secondaryTitleSize),
+                            titleStyle('Start Time', secondaryTitleSize, TextAlign.left),
                             const SizedBox(height: 16),
                             GestureDetector(
                               onTap: () => _selectStartTime(),
@@ -438,7 +443,7 @@ class _AddTaskState extends State<AddTask>{
                   ),
                   if (_selectedStartTime != null) ...[
                     const SizedBox(height: 16),
-                    titleStyle('Reminders before Start Time', secondaryTitleSize),
+                    titleStyle('Reminders before Start Time', secondaryTitleSize, TextAlign.left),
                     const SizedBox(height: 16),
                     MultiSelectDialogField(
                       items: [
@@ -455,7 +460,7 @@ class _AddTaskState extends State<AddTask>{
                         MultiSelectItem(1440, '1 day before'),
                         MultiSelectItem(2880, '2 days before'),
                       ],
-                      title: titleStyle('Choose reminders', secondaryTitleSize),
+                      title: titleStyle('Choose reminders', secondaryTitleSize, TextAlign.left),
                       selectedColor: primaryColor,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.8),
@@ -494,7 +499,7 @@ class _AddTaskState extends State<AddTask>{
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            titleStyle('Priority', secondaryTitleSize),
+                            titleStyle('Priority', secondaryTitleSize, TextAlign.left),
                             const SizedBox(height: 16),
                             DropdownButtonFormField(
                               dropdownColor: Colors.grey.shade200,
@@ -546,7 +551,7 @@ class _AddTaskState extends State<AddTask>{
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            titleStyle('Deadline', secondaryTitleSize),
+                            titleStyle('Deadline', secondaryTitleSize, TextAlign.left),
                             const SizedBox(height: 16),
                             GestureDetector(
                               onTap: () => _selectDeadline(),
@@ -577,7 +582,7 @@ class _AddTaskState extends State<AddTask>{
                   ),
                   if (_selectedDeadline != null) ...[
                     const SizedBox(height: 16),
-                    titleStyle('Reminders before Deadline', secondaryTitleSize),
+                    titleStyle('Reminders before Deadline', secondaryTitleSize, TextAlign.left),
                     const SizedBox(height: 16),
                     MultiSelectDialogField(
                       items: [
@@ -596,7 +601,7 @@ class _AddTaskState extends State<AddTask>{
                         MultiSelectItem(300, '5 hours before'),
                         MultiSelectItem(360, '6 hours before'),
                       ],
-                      title: titleStyle('Choose reminders', secondaryTitleSize),
+                      title: titleStyle('Choose reminders', secondaryTitleSize, TextAlign.left),
                       selectedColor: primaryColor,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.8),
@@ -628,7 +633,7 @@ class _AddTaskState extends State<AddTask>{
                     ),
                   ],
                   const SizedBox(height: 16),
-                  titleStyle('Add destination', secondaryTitleSize),
+                  titleStyle('Add destination', secondaryTitleSize, TextAlign.left),
                   const SizedBox(height: 16),
                   GestureDetector(
                     onTap: () {

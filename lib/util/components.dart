@@ -43,14 +43,15 @@ InputDecoration addPageInputStyle(String labelText) {
   );
 }
 
-Text titleStyle(String title, double size) {
+Text titleStyle(String title, double size, TextAlign textAlignment) {
   return Text(
       title,
       style: TextStyle(
         color: Colors.black,
         fontSize: size,
         fontFamily: font1,
-      )
+      ),
+    textAlign: textAlignment,
   );
 }
 
@@ -65,7 +66,7 @@ Container detailsContainer(String title, String content, TextAlign textAlignment
       title: Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Center(
-          child: titleStyle(title, secondaryTitleSize),
+          child: titleStyle(title, secondaryTitleSize, textAlignment),
         )
       ),
       subtitle: Text(

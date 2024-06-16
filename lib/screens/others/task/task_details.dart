@@ -17,10 +17,11 @@ class TaskDetails extends StatelessWidget{
   final LatLng? destination;
   final String status;
   final String category;
-  final List notificationIDs;
+  final Map<String, dynamic>? startTimeReminders;
+  final Map<String, dynamic>? deadlineReminders;
   final String id;
 
-  const TaskDetails({super.key, required this.title, required this.description, required this.date, required this.startTime, required this.deadline, required this.priority, required this.destination, required this.status, required this.category, required this.notificationIDs, required this.id});
+  const TaskDetails({super.key, required this.title, required this.description, required this.date, required this.startTime, required this.deadline, required this.priority, required this.destination, required this.status, required this.category, required this.id, this.startTimeReminders, this.deadlineReminders});
 
   @override
   Widget build(BuildContext context) {
@@ -45,22 +46,22 @@ class TaskDetails extends StatelessWidget{
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'Edit task') {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => EditTask(
-                    index: 1,
-                    title: title,
-                    description: description,
-                    category: category,
-                    date: date,
-                    priority: priority,
-                    status: status,
-                    startTime: startTime,
-                    deadline: deadline,
-                    destination: destination,
-                    id: id,
-                  ),),
-                );
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => EditTask(
+                //     index: 1,
+                //     title: title,
+                //     description: description,
+                //     category: category,
+                //     date: date,
+                //     priority: priority,
+                //     status: status,
+                //     startTime: startTime,
+                //     deadline: deadline,
+                //     destination: destination,
+                //     id: id,
+                //   ),),
+                // );
               }
             },
             itemBuilder: (BuildContext context) {
@@ -159,8 +160,12 @@ class TaskDetails extends StatelessWidget{
                         ),
                         const SizedBox(height: 16),
                         if (description != '')
-                          detailsContainer("Description", description, TextAlign.left),
-                        const SizedBox(height: 16),
+                          Column(
+                            children: [
+                              detailsContainer("Description", description, TextAlign.left),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
                         (startTime != null && deadline != null)
                           ? Row(
                             children: [
@@ -176,6 +181,20 @@ class TaskDetails extends StatelessWidget{
                               : Container(),
                         if (startTime != null || deadline != null)
                           const SizedBox(height: 16),
+                        if (startTimeReminders != null && startTimeReminders!.length > 1)
+                          Column(
+                            children: [
+                              detailsContainer("Notification before start time:", formatMinutesList(startTimeReminders!.keys.toList()), TextAlign.center),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+                        if (deadlineReminders != null && deadlineReminders!.length > 1)
+                          Column(
+                            children: [
+                              detailsContainer("Reminder before deadline:", formatMinutesList(deadlineReminders!.keys.toList()), TextAlign.center),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
                         if (destination != null)
                           GestureDetector(
                             onTap: () {
@@ -240,5 +259,25 @@ class TaskDetails extends StatelessWidget{
     } else {
       throw 'Could not launch $url';
     }
+  }
+
+
+  String formatMinutesList(List<String> minutes) {
+    StringBuffer formattedString = StringBuffer();
+
+    for (String minuteString in minutes) {
+      int minute = int.parse(minuteString);
+      if (minute > 0 && minute < 60) {
+        formattedString.writeln('$minute minutes');
+      } else if (minute >= 60 && minute < 1440) {
+        int hours = minute ~/ 60;
+        formattedString.writeln('$hours hour(s)');
+      } else if (minute >= 1440) {
+        int days = minute ~/ 1440;
+        formattedString.writeln('$days day(s)');
+      }
+    }
+
+    return formattedString.toString();
   }
 }

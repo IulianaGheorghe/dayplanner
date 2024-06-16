@@ -100,10 +100,18 @@ Future<void> cancelNotification(String userID, String taskID, String formattedDa
         .doc(taskID)
         .get();
 
-    if (taskSnapshot.exists && (taskSnapshot.data() as Map<String, dynamic>).containsKey('notificationIDs')) {
-      List notificationIDs = taskSnapshot['notificationIDs'];
-      for (var id in notificationIDs) {
-        await FlutterLocalNotificationsPlugin().cancel(id);
+    if (taskSnapshot.exists) {
+      if ((taskSnapshot.data() as Map<String, dynamic>).containsKey('startTimeReminders')) {
+        List startTimeRemindersIDs = taskSnapshot['startTimeReminders'].values.toList();
+        for (var id in startTimeRemindersIDs) {
+          await FlutterLocalNotificationsPlugin().cancel(id);
+        }
+      }
+      if ((taskSnapshot.data() as Map<String, dynamic>).containsKey('deadlineReminders')) {
+        List deadlineRemindersIDs = taskSnapshot['deadlineReminders'].values.toList();
+        for (var id in deadlineRemindersIDs) {
+          await FlutterLocalNotificationsPlugin().cancel(id);
+        }
       }
     }
   } catch (e) {
@@ -249,9 +257,12 @@ Future<List<Map<String, dynamic>>> getAllTasks(String userID, String date) async
           )
               : null,
           'status': doc['status'],
-          'notificationIDs': doc.data().containsKey('notificationIDs')
-              ? doc['notificationIDs']
-              : [],
+          'startTimeReminders': doc.data().containsKey('startTimeReminders')
+              ? doc['startTimeReminders']
+              : null,
+          'deadlineReminders': doc.data().containsKey('deadlineReminders')
+              ? doc['deadlineReminders']
+              : null,
         };
       }).toList();
     }
@@ -302,8 +313,11 @@ Future<List<Map<String, dynamic>>> getTasksByCategory(String userID, String cate
           )
               : null,
           'status': doc['status'],
-          'notificationIDs': doc.data().containsKey('notificationIDs')
-              ? doc['notificationIDs']
+          'startTimeReminders': doc.data().containsKey('startTimeReminders')
+              ? doc['startTimeReminders']
+              : [],
+          'deadlineReminders': doc.data().containsKey('deadlineReminders')
+              ? doc['deadlineReminders']
               : [],
         };
       }).toList();
