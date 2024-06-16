@@ -140,6 +140,7 @@ class _EditProfileState extends State<EditProfile>{
         ),
       ),
       home: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           leading: BackButton(
             onPressed: () {
@@ -208,6 +209,7 @@ class _EditProfileState extends State<EditProfile>{
       padding: const EdgeInsets.only(top: 20, left: 16, bottom: 25, right: 16),
       child: ListView(
         children: [
+          const SizedBox(height: 20,),
           Center(
             child: Stack(
               children: [
@@ -269,25 +271,16 @@ class _EditProfileState extends State<EditProfile>{
               ],
             ),
           ),
-          const SizedBox(height: 20),
-          Center(
-            child: Text(
-              userEmail,
-              style: const TextStyle(
-                fontFamily: font1,
-                fontSize: 20,
-              ),
-            ),
-          ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 50),
           TextFormField(
+            textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
-              labelStyle: const TextStyle(color: primaryColor),
-              enabledBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: primaryColor),
+              labelStyle: TextStyle(color: Colors.cyan.shade800),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.cyan.shade800),
               ),
-              focusedBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: primaryColor),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.cyan.shade800),
               ),
               labelText: 'Name',
               hintText: userName,
@@ -303,13 +296,14 @@ class _EditProfileState extends State<EditProfile>{
           const SizedBox(height: 15),
           TextFormField(
             obscureText: showPassword,
+            cursorColor: Colors.cyan.shade800,
             decoration: InputDecoration(
-              labelStyle: const TextStyle(color: primaryColor),
-              enabledBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: primaryColor),
+              labelStyle: TextStyle(color: Colors.cyan.shade800),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.cyan.shade800),
               ),
-              focusedBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: primaryColor),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.cyan.shade800),
               ),
               suffixIcon: IconButton(
                 onPressed: () {
