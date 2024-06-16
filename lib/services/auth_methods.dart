@@ -60,7 +60,7 @@ class FirebaseAuthMethods {
       addInitialCategories(credentials.user!.uid);
 
       Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const MyBottomNavigationBar(index: 0)));
+          MaterialPageRoute(builder: (context) => MyBottomNavigationBar(index: 0, selectedCalendarDate: DateTime.now(),)));
     } on FirebaseAuthException catch (e) {
       showSnackBar(context, e.message!, errorColor);
     }
@@ -85,7 +85,7 @@ class FirebaseAuthMethods {
           password: password
       );
       Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const MyBottomNavigationBar(index: 0)));
+          MaterialPageRoute(builder: (context) => MyBottomNavigationBar(index: 0, selectedCalendarDate: DateTime.now(),)));
 
     } on FirebaseAuthException catch (e) {
       showSnackBar(context, e.message!, errorColor);

@@ -10,8 +10,9 @@ import '../screens/tabs/home.dart';
 
 class MyBottomNavigationBar extends StatefulWidget {
   final int index;
+  final DateTime selectedCalendarDate;
 
-  const MyBottomNavigationBar({super.key, required this.index});
+  const MyBottomNavigationBar({super.key, required this.index, required this.selectedCalendarDate});
 
   @override
   State<MyBottomNavigationBar> createState() => _MyBottomNavigationBarState();
@@ -59,7 +60,7 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
   Widget build(BuildContext context) {
     final screens = [
       const Home(),
-      const Calendar(),
+      Calendar(selectedDay: widget.selectedCalendarDate,),
       const Friends(),
       Account(userID: userID),
     ];

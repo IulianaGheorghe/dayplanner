@@ -157,7 +157,10 @@ class _AddTaskState extends State<AddTask>{
         Navigator.pushReplacement<void, void>(
           context,
           MaterialPageRoute<void>(
-            builder: (BuildContext context) => MyBottomNavigationBar(index: _navigatorIndex),
+            builder: (BuildContext context) => MyBottomNavigationBar(
+              index: _navigatorIndex,
+              selectedCalendarDate: _selectedDate,
+            ),
           ),
         );
 

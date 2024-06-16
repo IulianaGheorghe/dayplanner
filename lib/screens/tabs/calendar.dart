@@ -10,7 +10,8 @@ import '../../services/task_services.dart';
 import '../others/task/tasks_list.dart';
 
 class Calendar extends StatefulWidget{
-  const Calendar({super.key});
+  final DateTime selectedDay;
+  const Calendar({super.key, required this.selectedDay});
 
   @override
   State<Calendar> createState() => _CalendarState();
@@ -28,7 +29,7 @@ class _CalendarState extends State<Calendar>{
   @override
   void initState() {
     super.initState();
-
+    _selectedDay = widget.selectedDay;
     User? user = FirebaseAuth.instance.currentUser;
     userID = user!.uid;
     _updateTasksCount(_focusedDay);
