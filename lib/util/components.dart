@@ -78,6 +78,27 @@ Container detailsContainer(String title, String content, TextAlign textAlignment
   );
 }
 
+Widget customTooltip(String text) {
+  return Transform.translate(
+    offset: const Offset(0, -10),
+    child: Tooltip(
+      message: text,
+      preferBelow: false,
+      decoration: BoxDecoration(
+        color: Colors.grey,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      textStyle: const TextStyle(
+        color: Colors.white,
+        fontSize: 16,
+      ),
+      margin: const EdgeInsets.only(left: 40, right: 40),
+      padding: const EdgeInsets.all(15),
+      child: const Icon(Icons.info_outline, color: secondColor,),
+    ),
+  );
+}
+
 Color getColorForPriority(String option) {
   switch (option) {
     case 'Low':

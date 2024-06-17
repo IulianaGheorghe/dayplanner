@@ -324,7 +324,12 @@ class _TaskFormState extends State<TaskForm> {
             ),
             if (_selectedStartTime != null) ...[
               const SizedBox(height: 16),
-              titleStyle('Reminders before Start Time', secondaryTitleSize, TextAlign.left),
+              Row(
+                children: [
+                  titleStyle('Reminders before Start Time', secondaryTitleSize, TextAlign.left),
+                  customTooltip('Even if no reminder is selected, a notification will still be sent at the beginning of the task.'),
+                ],
+              ),
               const SizedBox(height: 16),
               MultiSelectDialogField(
                 initialValue: _selectedRemindersStart,
@@ -464,7 +469,12 @@ class _TaskFormState extends State<TaskForm> {
             ),
             if (_selectedDeadline != null) ...[
               const SizedBox(height: 16),
-              titleStyle('Reminders before Deadline', secondaryTitleSize, TextAlign.left),
+              Row(
+                children: [
+                  titleStyle('Reminders before Deadline', secondaryTitleSize, TextAlign.left),
+                  customTooltip('Even if no reminder is selected, a notification will still be sent at the end of the task.'),
+                ],
+              ),
               const SizedBox(height: 16),
               MultiSelectDialogField(
                 initialValue: _selectedRemindersDeadline,
