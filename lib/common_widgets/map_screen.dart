@@ -30,7 +30,9 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    _markers.add(widget.initialLocation as Marker);
+    if (widget.initialLocation != null) {
+      _addMarker(widget.initialLocation!);
+    }
     _searchController = TextEditingController();
     _checkLocationService();
   }

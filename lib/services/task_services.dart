@@ -119,6 +119,20 @@ Future<void> cancelNotification(String userID, String taskID, String formattedDa
   }
 }
 
+Future<void> updateTask(Map<String, dynamic> task, String userID, String formattedDate, String taskID) async {
+  try {
+    await FirebaseFirestore.instance.collection('users')
+        .doc(userID)
+        .collection('tasks')
+        .doc(formattedDate)
+        .collection("day tasks")
+        .doc(taskID)
+        .update(task);
+  }catch (e) {
+    throw Exception('Error updating task: $e');
+  }
+}
+
 Future<void> deleteTask(String userID, String taskID, String formattedDate, String categoryName) async{
   String categoryID = await getCategoryId(userID, categoryName);
   Future<void> updateTaskCountFromTasks() async {
@@ -163,6 +177,63 @@ Future<void> deleteTask(String userID, String taskID, String formattedDate, Stri
         .delete();
   } catch (e) {
     throw Exception('Error deleting task: $e');
+  }
+}
+
+Future<void> changeTaskCategory(String userID, String newCategoryName, String oldCategoryName, String taskId, String formattedDate) async {
+  try {
+    var oldCategoryId = await getCategoryId(userID, oldCategoryName);
+    var newCategoryId = await getCategoryId(userID, newCategoryName);
+    var taskRef = _firestore.collection("users")
+      .doc(userID)
+      .collection("tasks")
+      .doc(formattedDate)
+      .collection("day tasks")
+      .doc(taskId);
+
+    var oldTaskCategoryRef = await _firestore.collection("users")
+        .doc(userID)
+        .collection("categories")
+        .doc(oldCategoryId)
+        .collection("tasks")
+        .where('taskRef', isEqualTo: taskRef)
+        .limit(1)
+        .get();
+
+    await oldTaskCategoryRef.docs.first.reference.delete();
+    DocumentReference documentRef = _firestore.collection("users")
+        .doc(userID)
+        .collection("categories")
+        .doc(oldCategoryId);
+    DocumentSnapshot snapshot = await documentRef.get();
+    if (snapshot.exists) {
+      int currentNoOfTasks = snapshot.get('tasksCount');
+      int decrementedValue = currentNoOfTasks - 1;
+      await documentRef.update({'tasksCount': decrementedValue});
+    }
+
+    await _firestore.collection("users")
+      .doc(userID)
+      .collection("categories")
+      .doc(newCategoryId)
+      .collection("tasks")
+      .add(
+        {
+          'taskRef': taskRef
+        }
+      );
+    DocumentReference documentRef2 = _firestore.collection("users")
+        .doc(userID)
+        .collection("categories")
+        .doc(newCategoryId);
+    DocumentSnapshot snapshot2 = await documentRef2.get();
+    if (snapshot.exists) {
+      int currentNoOfTasks2 = snapshot2.get('tasksCount');
+      int incrementedValue2 = currentNoOfTasks2 + 1;
+      await documentRef2.update({'tasksCount': incrementedValue2});
+    }
+  } catch (e) {
+    throw Exception('Error changing category for task: $e');
   }
 }
 

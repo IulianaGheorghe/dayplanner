@@ -46,22 +46,23 @@ class TaskDetails extends StatelessWidget{
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'Edit task') {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => EditTask(
-                //     index: 1,
-                //     title: title,
-                //     description: description,
-                //     category: category,
-                //     date: date,
-                //     priority: priority,
-                //     status: status,
-                //     startTime: startTime,
-                //     deadline: deadline,
-                //     destination: destination,
-                //     id: id,
-                //   ),),
-                // );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => EditTask(
+                    title: title,
+                    description: description,
+                    category: category,
+                    date: date,
+                    priority: priority,
+                    status: status,
+                    startTime: startTime,
+                    deadline: deadline,
+                    destination: destination,
+                    id: id,
+                    startTimeReminders: startTimeReminders,
+                    deadlineReminders: deadlineReminders,
+                  ),),
+                );
               }
             },
             itemBuilder: (BuildContext context) {

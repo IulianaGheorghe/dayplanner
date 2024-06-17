@@ -181,6 +181,7 @@ class _TasksListState extends State<TasksList> {
                 child: GestureDetector(
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(
+                      fullscreenDialog: true,
                       builder: (context) =>
                         TaskDetails(
                           title: task['title'],
