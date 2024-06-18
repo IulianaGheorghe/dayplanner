@@ -9,7 +9,7 @@ import '../../../common_widgets/showSnackBar.dart';
 import '../../../common_widgets/taskForm.dart';
 import '../../../services/task_services.dart';
 import '../../../util/constants.dart';
-import '../../../util/notification_service.dart';
+import '../../../services/notification_service.dart';
 
 class AddTask extends StatefulWidget{
   final DateTime date;

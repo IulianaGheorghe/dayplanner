@@ -1,5 +1,5 @@
 import 'package:dayplanner/screens/welcome.dart';
-import 'package:dayplanner/util/notification_service.dart';
+import 'package:dayplanner/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';

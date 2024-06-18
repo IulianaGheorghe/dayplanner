@@ -508,6 +508,7 @@ Future<List<Map<String, dynamic>>> getCategoryTaskPercentage(String userID) asyn
         'name': categoryName,
         'percentage': categoryPercentage,
         'color': chartColors[index],
+        'tasksCount': categoryTaskCount
       });
       index++;
     }
