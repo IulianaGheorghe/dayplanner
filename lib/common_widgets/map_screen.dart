@@ -9,9 +9,10 @@ import 'package:nominatim_flutter/nominatim_flutter.dart';
 import '../../util/constants.dart';
 
 class MapScreen extends StatefulWidget {
+  final LatLng? initialLocation;
   final Function(LatLng) onLocationSelected;
 
-  const MapScreen({Key? key, required this.onLocationSelected}) : super(key: key);
+  const MapScreen({super.key, required this.onLocationSelected, this.initialLocation});
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -29,6 +30,9 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialLocation != null) {
+      _addMarker(widget.initialLocation!);
+    }
     _searchController = TextEditingController();
     _checkLocationService();
   }
@@ -93,6 +97,10 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _searchPlaces(String query) async {
+    if (query.isEmpty) {
+      return [];
+    }
+
     if (_currentLocation == null || _currentCountryCode == null) {
       return [];
     }
@@ -100,28 +108,31 @@ class _MapScreenState extends State<MapScreen> {
     final lon = _currentLocation!.longitude;
 
     // final viewbox = ViewBox(lat - 0.1, lat + 0.1, lon - 0.1, lon + 0.1);
+    try {
+      final response = await NominatimFlutter.instance.search(
+        searchRequest: SearchRequest(
+          query: query,
+          limit: 10,
+          countryCodes: [_currentCountryCode!],
+          // viewBox: viewbox,
+        ),
+        language: 'en-US,en;q=0.5',
+      );
 
-    final response = await NominatimFlutter.instance.search(
-      searchRequest: SearchRequest(
-        query: query,
-        limit: 10,
-        countryCodes: [_currentCountryCode!],
-        // viewBox: viewbox,
-      ),
-      language: 'en-US,en;q=0.5',
-    );
-
-    if (response.isNotEmpty) {
-      final result = response.map<Map<String, dynamic>>((place) {
-        return {
-          'display_name': place.displayName,
-          'lat': place.lat,
-          'lon': place.lon,
-        };
-      }).toList();
-      return result;
-    } else {
-      throw Exception('Failed to load predictions');
+      if (response.isNotEmpty) {
+        final result = response.map<Map<String, dynamic>>((place) {
+          return {
+            'display_name': place.displayName,
+            'lat': place.lat,
+            'lon': place.lon,
+          };
+        }).toList();
+        return result;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return [];
     }
   }
 

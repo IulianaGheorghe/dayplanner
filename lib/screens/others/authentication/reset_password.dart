@@ -72,7 +72,7 @@ class _ResetPassword extends State<ResetPassword>{
                         try {
                           _handleResetPassword();
                         } catch (e) {
-                          showSnackBar(context, 'Email does not exist: $e');
+                          showSnackBar(context, 'Email does not exist: $e', errorColor);
                         }
                       },
                       style: ElevatedButton.styleFrom(

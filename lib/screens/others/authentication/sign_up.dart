@@ -1,8 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-
-import '../../../common_widgets/navigationBar.dart';
-import '../../../common_widgets/showSnackBar.dart';
 import '../../../services/auth_methods.dart';
 import '../../../util/components.dart';
 import '../../../util/constants.dart';
@@ -34,8 +31,6 @@ class _SignUp extends State<SignUp> {
           confirmPassword: confirmPasswordController,
           context: context,
         );
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const MyBottomNavigationBar(index: 0)));
       } catch (e) {
         throw Exception('Error creating the user: $e');
       }
@@ -85,13 +80,6 @@ class _SignUp extends State<SignUp> {
                                           cursorColor: inputDecorationColor,
                                           decoration: Box().textInputDecoration(
                                               'Name', 'Enter your name'),
-                                          validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              showSnackBar( context, 'Please complete all fields.');
-                                              throw Exception('Field cannot be empty.');
-                                            }
-                                            return null;
-                                          },
                                           onSaved: (value) {
                                             nameController = value ?? '';
                                           },
@@ -105,13 +93,6 @@ class _SignUp extends State<SignUp> {
                                           cursorColor: inputDecorationColor,
                                           decoration: Box().textInputDecoration(
                                               'E-mail', 'Enter your e-mail'),
-                                          validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              showSnackBar( context, 'Please complete all fields.');
-                                              throw Exception('Field cannot be empty.');
-                                            }
-                                            return null;
-                                          },
                                           onSaved: (value) {
                                             emailController = value ?? '';
                                           },
@@ -126,13 +107,6 @@ class _SignUp extends State<SignUp> {
                                           obscureText: true,
                                           decoration: Box().textInputDecoration(
                                               'Password', 'Enter your password'),
-                                          validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              showSnackBar( context, 'Please complete all fields.');
-                                              throw Exception('Field cannot be empty.');
-                                            }
-                                            return null;
-                                          },
                                           onSaved: (value) {
                                             passwordController = value ?? '';
                                           },
@@ -147,13 +121,6 @@ class _SignUp extends State<SignUp> {
                                           decoration: Box().textInputDecoration(
                                               'Repeat Password',
                                               'Repeat your password'),
-                                          validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              showSnackBar( context, 'Please complete all fields.');
-                                              throw Exception('Field cannot be empty.');
-                                            }
-                                            return null;
-                                          },
                                           onSaved: (value) {
                                             confirmPasswordController = value ?? '';
                                           },

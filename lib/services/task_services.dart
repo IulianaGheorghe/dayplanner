@@ -100,14 +100,36 @@ Future<void> cancelNotification(String userID, String taskID, String formattedDa
         .doc(taskID)
         .get();
 
-    if (taskSnapshot.exists && (taskSnapshot.data() as Map<String, dynamic>).containsKey('notificationIDs')) {
-      List notificationIDs = taskSnapshot['notificationIDs'];
-      for (var id in notificationIDs) {
-        await FlutterLocalNotificationsPlugin().cancel(id);
+    if (taskSnapshot.exists) {
+      if ((taskSnapshot.data() as Map<String, dynamic>).containsKey('startTimeReminders')) {
+        List startTimeRemindersIDs = taskSnapshot['startTimeReminders'].values.toList();
+        for (var id in startTimeRemindersIDs) {
+          await FlutterLocalNotificationsPlugin().cancel(id);
+        }
+      }
+      if ((taskSnapshot.data() as Map<String, dynamic>).containsKey('deadlineReminders')) {
+        List deadlineRemindersIDs = taskSnapshot['deadlineReminders'].values.toList();
+        for (var id in deadlineRemindersIDs) {
+          await FlutterLocalNotificationsPlugin().cancel(id);
+        }
       }
     }
   } catch (e) {
     throw Exception('Error canceling notifications: $e');
+  }
+}
+
+Future<void> updateTask(Map<String, dynamic> task, String userID, String formattedDate, String taskID) async {
+  try {
+    await FirebaseFirestore.instance.collection('users')
+        .doc(userID)
+        .collection('tasks')
+        .doc(formattedDate)
+        .collection("day tasks")
+        .doc(taskID)
+        .update(task);
+  }catch (e) {
+    throw Exception('Error updating task: $e');
   }
 }
 
@@ -158,6 +180,63 @@ Future<void> deleteTask(String userID, String taskID, String formattedDate, Stri
   }
 }
 
+Future<void> changeTaskCategory(String userID, String newCategoryName, String oldCategoryName, String taskId, String formattedDate) async {
+  try {
+    var oldCategoryId = await getCategoryId(userID, oldCategoryName);
+    var newCategoryId = await getCategoryId(userID, newCategoryName);
+    var taskRef = _firestore.collection("users")
+      .doc(userID)
+      .collection("tasks")
+      .doc(formattedDate)
+      .collection("day tasks")
+      .doc(taskId);
+
+    var oldTaskCategoryRef = await _firestore.collection("users")
+        .doc(userID)
+        .collection("categories")
+        .doc(oldCategoryId)
+        .collection("tasks")
+        .where('taskRef', isEqualTo: taskRef)
+        .limit(1)
+        .get();
+
+    await oldTaskCategoryRef.docs.first.reference.delete();
+    DocumentReference documentRef = _firestore.collection("users")
+        .doc(userID)
+        .collection("categories")
+        .doc(oldCategoryId);
+    DocumentSnapshot snapshot = await documentRef.get();
+    if (snapshot.exists) {
+      int currentNoOfTasks = snapshot.get('tasksCount');
+      int decrementedValue = currentNoOfTasks - 1;
+      await documentRef.update({'tasksCount': decrementedValue});
+    }
+
+    await _firestore.collection("users")
+      .doc(userID)
+      .collection("categories")
+      .doc(newCategoryId)
+      .collection("tasks")
+      .add(
+        {
+          'taskRef': taskRef
+        }
+      );
+    DocumentReference documentRef2 = _firestore.collection("users")
+        .doc(userID)
+        .collection("categories")
+        .doc(newCategoryId);
+    DocumentSnapshot snapshot2 = await documentRef2.get();
+    if (snapshot.exists) {
+      int currentNoOfTasks2 = snapshot2.get('tasksCount');
+      int incrementedValue2 = currentNoOfTasks2 + 1;
+      await documentRef2.update({'tasksCount': incrementedValue2});
+    }
+  } catch (e) {
+    throw Exception('Error changing category for task: $e');
+  }
+}
+
 Future<String> getCategoryId(String userID, String category) async {
   String id = '';
 
@@ -171,46 +250,6 @@ Future<String> getCategoryId(String userID, String category) async {
 
   id = snapshot.docs.first.id;
   return id;
-}
-
-Future<List<Task>> getTasksForDay(DateTime day, String userID) async {
-  String formattedDate = DateFormat('yyyy-MM-dd').format(day);
-
-  QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore
-      .collection('users')
-      .doc(userID)
-      .collection('tasks')
-      .doc(formattedDate)
-      .collection("day tasks")
-      .get();
-
-  List<Task> tasks = snapshot.docs.map((doc) {
-    Map<String, dynamic> data = doc.data();
-    return Task(
-        userID,
-        data['title'],
-        data['description'],
-        data['category'],
-        doc['date'].toDate(),
-        (doc['startTime'] != '') ?
-          TimeOfDay(hour: int.parse(doc['startTime'].split(':')[0]),
-            minute: int.parse(doc['startTime'].split(':')[1]),
-          ) : null,
-        (doc['deadline'] != '') ?
-          TimeOfDay(hour: int.parse(doc['deadline'].split(':')[0]),
-            minute: int.parse(doc['deadline'].split(':')[1]),
-          ) : null,
-        doc['priority'],
-        (doc['destination'] != '') ?
-          LatLng(double.parse(doc['destination'].split(',')[0]),
-            double.parse(doc['destination'].split(',')[1]),
-          ) : null,
-        doc['status'],
-        (data['createdAt'] as Timestamp).toDate(),
-    );
-  }).toList();
-
-  return tasks;
 }
 
 Future<Map<String, int>> getTasksCountForMonth(DateTime focusedDay, String userID) async {
@@ -289,6 +328,12 @@ Future<List<Map<String, dynamic>>> getAllTasks(String userID, String date) async
           )
               : null,
           'status': doc['status'],
+          'startTimeReminders': doc.data().containsKey('startTimeReminders')
+              ? doc['startTimeReminders']
+              : null,
+          'deadlineReminders': doc.data().containsKey('deadlineReminders')
+              ? doc['deadlineReminders']
+              : null,
         };
       }).toList();
     }
@@ -339,6 +384,12 @@ Future<List<Map<String, dynamic>>> getTasksByCategory(String userID, String cate
           )
               : null,
           'status': doc['status'],
+          'startTimeReminders': doc.data().containsKey('startTimeReminders')
+              ? doc['startTimeReminders']
+              : [],
+          'deadlineReminders': doc.data().containsKey('deadlineReminders')
+              ? doc['deadlineReminders']
+              : [],
         };
       }).toList();
     }
@@ -457,6 +508,7 @@ Future<List<Map<String, dynamic>>> getCategoryTaskPercentage(String userID) asyn
         'name': categoryName,
         'percentage': categoryPercentage,
         'color': chartColors[index],
+        'tasksCount': categoryTaskCount
       });
       index++;
     }

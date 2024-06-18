@@ -49,6 +49,7 @@ class _FriendsState extends State<Friends> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           backgroundColor: friendsPageColor,
           centerTitle: true,
@@ -74,7 +75,12 @@ class _FriendsState extends State<Friends> {
                   valueColor:AlwaysStoppedAnimation<Color>(profilePageColor),
                 ),
               )
-              : _friendsListWidget(),
+              : Column(
+                children: [
+                  const SizedBox(height: 20),
+                  Expanded(child: _friendsListWidget(),)
+                ],
+              )
           ],
         ),
         floatingActionButton: FloatingActionButton(
@@ -102,7 +108,6 @@ class _FriendsState extends State<Friends> {
       itemBuilder: (context, index) {
         final friend = friendsDetails[index];
         return Column(children: [
-          const SizedBox(height: 30),
           Dismissible(
             key: UniqueKey(),
             direction: DismissDirection.endToStart,
@@ -177,7 +182,7 @@ class _FriendsState extends State<Friends> {
               setState(() {
                 friendsDetails.removeAt(index);
               });
-              showSnackBar(context, "Friend successfully deleted");
+              showSnackBar(context, "Friend successfully deleted", primaryColor);
               await userServices.deleteFriend(friend['uid']!);
             },
             child: GestureDetector(
@@ -193,7 +198,7 @@ class _FriendsState extends State<Friends> {
                 height: 125,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.cyan.shade700,
+                  color: Colors.blue.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
@@ -231,7 +236,6 @@ class _FriendsState extends State<Friends> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
         ]);
       },
     )
@@ -318,7 +322,7 @@ class _FriendsState extends State<Friends> {
                       });
                     } else {
                       await userServices.addFriend(friendId);
-                      showSnackBar(context, "Friend successfully added");
+                      showSnackBar(context, "Friend successfully added", primaryColor);
                       setState(() {
                         localErrorMessage = null;
                       });

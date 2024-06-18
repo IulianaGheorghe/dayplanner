@@ -1,7 +1,7 @@
 import 'package:dayplanner/util/constants.dart';
 import 'package:flutter/material.dart';
 
-void showSnackBar(BuildContext context, String text){
+void showSnackBar(BuildContext context, String text, Color color){
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(
@@ -12,7 +12,7 @@ void showSnackBar(BuildContext context, String text){
           color: Colors.black
         ),
       ),
-      backgroundColor: primaryColor,
+      backgroundColor: color,
     ),
   );
 }

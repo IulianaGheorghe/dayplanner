@@ -82,6 +82,26 @@ class _AccountState extends State<Account>{
     _noOfTodoAndDoneTasksForWeek = getNumberOfTodoAndDoneTasksForWeek(userID, _startOfWeek, _endOfWeek);
   }
 
+  void _previousWeek() {
+    DateTime startOfWeek = DateFormat('yyyy-MM-dd').parse(_startOfWeek);
+    DateTime endOfWeek = DateFormat('yyyy-MM-dd').parse(_endOfWeek);
+    setState(() {
+      _startOfWeek = DateFormat('yyyy-MM-dd').format(startOfWeek.subtract(const Duration(days: 7)));
+      _endOfWeek = DateFormat('yyyy-MM-dd').format(endOfWeek.subtract(const Duration(days: 7)));
+      _noOfTodoAndDoneTasksForWeek = getNumberOfTodoAndDoneTasksForWeek(userID, _startOfWeek, _endOfWeek);
+    });
+  }
+
+  void _nextWeek() {
+    DateTime startOfWeek = DateFormat('yyyy-MM-dd').parse(_startOfWeek);
+    DateTime endOfWeek = DateFormat('yyyy-MM-dd').parse(_endOfWeek);
+    setState(() {
+      _startOfWeek = DateFormat('yyyy-MM-dd').format(startOfWeek.add(const Duration(days: 7)));
+      _endOfWeek = DateFormat('yyyy-MM-dd').format(endOfWeek.add(const Duration(days: 7)));
+      _noOfTodoAndDoneTasksForWeek = getNumberOfTodoAndDoneTasksForWeek(userID, _startOfWeek, _endOfWeek);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isCurrentUserProfile;
@@ -385,7 +405,7 @@ class _AccountState extends State<Account>{
                 ),
               ),
               Padding(
-                  padding: const EdgeInsets.all(40.0),
+                  padding: const EdgeInsets.only(top: 40, bottom: 40, left: 20, right: 20),
                   child: SizedBox(
                     height: 200,
                     child: SingleChildScrollView(
@@ -397,7 +417,7 @@ class _AccountState extends State<Account>{
                             padding: const EdgeInsets.symmetric(vertical: 4.0),
                             child: Indicator(
                               color: category['color'],
-                              text: category['name'],
+                              text: '${category['name']}: ${category['tasksCount']}',
                               isSquare: true,
                             ),
                           );
@@ -478,6 +498,30 @@ class _AccountState extends State<Account>{
                       ],
                     ),
                   ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_left, color: Colors.grey.shade700),
+                      onPressed: _previousWeek,
+                    ),
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        text: '$_startOfWeek - $_endOfWeek',
+                        style: const TextStyle(
+                          fontFamily: 'font1',
+                          fontSize: 18,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.arrow_right, color: Colors.grey.shade700),
+                      onPressed: _nextWeek,
+                    ),
+                  ],
                 ),
                 SfCartesianChart(
                     primaryXAxis: const CategoryAxis(),

@@ -181,17 +181,22 @@ class _TasksListState extends State<TasksList> {
                 child: GestureDetector(
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(
+                      fullscreenDialog: true,
                       builder: (context) =>
-                          TaskDetails(
-                              title: task['title'],
-                              description: task['description'],
-                              date: task['date'],
-                              startTime: task['startTime'],
-                              deadline: task['deadline'],
-                              priority: task['priority'],
-                              destination: task['destination'],
-                              status: task['status']
-                          ),
+                        TaskDetails(
+                          title: task['title'],
+                          description: task['description'],
+                          date: task['date'],
+                          startTime: task['startTime'],
+                          deadline: task['deadline'],
+                          priority: task['priority'],
+                          destination: task['destination'],
+                          status: task['status'],
+                          category: task['category'],
+                          id: task['id'],
+                          startTimeReminders: task.containsKey('startTimeReminders') ? task['startTimeReminders'] : null,
+                          deadlineReminders: task.containsKey('deadlineReminders') ? task['deadlineReminders'] : null,
+                        ),
                     ),
                     );
                   },

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../util/components.dart';
 import '../../../util/constants.dart';
+import 'edit_task.dart';
 
 
 class TaskDetails extends StatelessWidget{
@@ -14,8 +16,12 @@ class TaskDetails extends StatelessWidget{
   final String priority;
   final LatLng? destination;
   final String status;
+  final String category;
+  final Map<String, dynamic>? startTimeReminders;
+  final Map<String, dynamic>? deadlineReminders;
+  final String id;
 
-  const TaskDetails({super.key, required this.title, required this.description, required this.date, required this.startTime, required this.deadline, required this.priority, required this.destination, required this.status});
+  const TaskDetails({super.key, required this.title, required this.description, required this.date, required this.startTime, required this.deadline, required this.priority, required this.destination, required this.status, required this.category, required this.id, this.startTimeReminders, this.deadlineReminders});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +33,7 @@ class TaskDetails extends StatelessWidget{
           },
           color: Colors.black,
         ),
-        backgroundColor: primaryColor,
+        backgroundColor: taskDetailsColor,
         centerTitle: true,
         title: const Text('Task Details',
           style: TextStyle(
@@ -36,188 +42,205 @@ class TaskDetails extends StatelessWidget{
               color: Colors.black
           ),
         ),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'Edit task') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => EditTask(
+                    title: title,
+                    description: description,
+                    category: category,
+                    date: date,
+                    priority: priority,
+                    status: status,
+                    startTime: startTime,
+                    deadline: deadline,
+                    destination: destination,
+                    id: id,
+                    startTimeReminders: startTimeReminders,
+                    deadlineReminders: deadlineReminders,
+                  ),),
+                );
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              return [
+                const PopupMenuItem<String>(
+                    value: 'Edit task',
+                    child: Text('Edit task')
+                ),
+              ];
+            },
+            icon: const Icon(Icons.more_vert),
+          ),
+        ],
       ),
       body: Stack(
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/images/b2.jpg',
+            'assets/images/trq.jpg',
             fit: BoxFit.cover,
           ),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(25),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.shade300,
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    title: const Text(
-                      'Date',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    subtitle: Text(
-                      DateFormat('EEEE, d MMMM').format(date),
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (description != '')
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.shade300,
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: ListTile(
-                      title: const Text(
-                        'Description',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      subtitle: Text(
-                        description,
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                if (startTime != null)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.shade300,
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: ListTile(
-                      title: const Text(
-                        'Start Time',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      subtitle: Text(
-                        '${startTime!.hour}:${startTime!.minute}',
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                if (deadline != null)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.shade300,
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: ListTile(
-                      title: const Text(
-                        'Deadline',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      subtitle: Text(
-                        '${deadline!.hour}:${deadline!.minute}',
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.shade300,
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    title: const Text(
-                      'Priority',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    subtitle: Text(
-                      priority,
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (destination != null)
-                  GestureDetector(
-                    onTap: () {
-                      launchGoogleMaps(destination!.latitude, destination!.longitude);
-                    },
-                    child: Stack(
+                const SizedBox(height: 10),
+                Center(
+                  child: Container(
+                      padding: const EdgeInsets.all(20),
+                      width: MediaQuery.of(context).size.width / 1.5,
                       alignment: Alignment.center,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(20.0),
-                          child: Image.asset(
-                            'assets/images/location.jpg',
-                            fit: BoxFit.cover,
+                      decoration: BoxDecoration(
+                        color: getColorForPriority(priority).withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.shade300,
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
                           ),
-                        ),
-                        Positioned(
-                          top: 40,
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width / 1.3,
-                            child: const Text(
-                              'View Route to Destination in Google Maps',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 21.0,
-                                fontWeight: FontWeight.w900,
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Stack(
+                            alignment: Alignment.center,
+                            children: <Widget>[
+                              Text(
+                                title,
+                                style: TextStyle(
+                                  fontFamily: font1,
+                                  fontSize: 25,
+                                  fontWeight: FontWeight.w600,
+                                  foreground: Paint()
+                                    ..style = PaintingStyle.stroke
+                                    ..strokeWidth = 2.0
+                                    ..color = Colors.black,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
-                              textAlign: TextAlign.center,
-                            ),
-                          )
-                        ),
-                        const Positioned(
-                          bottom: 25,
-                          child: Icon(
-                            Icons.touch_app,
-                            color: Colors.white,
-                            size: 48.0,
+                              Text(
+                                title,
+                                style: TextStyle(
+                                  fontFamily: font1,
+                                  fontSize: 25,
+                                  color: Colors.teal.shade100,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 15,),
+                          Text(
+                            DateFormat('EEEE, d MMMM').format(date),
+                            style: const TextStyle(
+                              fontFamily: font1,
+                              fontSize: 17,
+                            ),
+                          ),
+                        ],
+                      )
+                  ),
+                ),
+                const SizedBox(height: 30),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(child: detailsContainer("Category", category, TextAlign.center),),
+                            const SizedBox(width: 16),
+                            Expanded(child: detailsContainer("Status", status, TextAlign.center)),
+                          ],
                         ),
+                        const SizedBox(height: 16),
+                        if (description != '')
+                          Column(
+                            children: [
+                              detailsContainer("Description", description, TextAlign.left),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+                        (startTime != null && deadline != null)
+                          ? Row(
+                            children: [
+                              Expanded(child: detailsContainer("Start Time", '${startTime!.hour}:${startTime!.minute}', TextAlign.center),),
+                              const SizedBox(width: 16),
+                              Expanded(child: detailsContainer("Deadline", '${deadline!.hour}:${deadline!.minute}', TextAlign.center)),
+                            ],
+                          )
+                          : (startTime != null)
+                            ? detailsContainer("Start Time", '${startTime!.hour}:${startTime!.minute}', TextAlign.center)
+                            : (deadline != null)
+                              ? detailsContainer("Deadline", '${deadline!.hour}:${deadline!.minute}', TextAlign.center)
+                              : Container(),
+                        if (startTime != null || deadline != null)
+                          const SizedBox(height: 16),
+                        if (startTimeReminders != null && startTimeReminders!.length > 1)
+                          Column(
+                            children: [
+                              detailsContainer("Notification before start time:", formatMinutesList(startTimeReminders!.keys.toList()), TextAlign.center),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+                        if (deadlineReminders != null && deadlineReminders!.length > 1)
+                          Column(
+                            children: [
+                              detailsContainer("Reminder before deadline:", formatMinutesList(deadlineReminders!.keys.toList()), TextAlign.center),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+                        if (destination != null)
+                          GestureDetector(
+                            onTap: () {
+                              launchGoogleMaps(destination!.latitude, destination!.longitude);
+                            },
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(20.0),
+                                  child: Image.asset(
+                                    'assets/images/location.jpg',
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                    top: 40,
+                                    child: SizedBox(
+                                      width: MediaQuery.of(context).size.width / 1.3,
+                                      child: const Text(
+                                        'View Route to Destination in Google Maps',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 21.0,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    )
+                                ),
+                                const Positioned(
+                                  bottom: 25,
+                                  child: Icon(
+                                    Icons.touch_app,
+                                    color: Colors.white,
+                                    size: 48.0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
-                  ),
+                  )
+                ),
               ],
             ),
           ),
@@ -237,5 +260,25 @@ class TaskDetails extends StatelessWidget{
     } else {
       throw 'Could not launch $url';
     }
+  }
+
+
+  String formatMinutesList(List<String> minutes) {
+    StringBuffer formattedString = StringBuffer();
+
+    for (String minuteString in minutes) {
+      int minute = int.parse(minuteString);
+      if (minute > 0 && minute < 60) {
+        formattedString.writeln('$minute minutes');
+      } else if (minute >= 60 && minute < 1440) {
+        int hours = minute ~/ 60;
+        formattedString.writeln('$hours hour(s)');
+      } else if (minute >= 1440) {
+        int days = minute ~/ 1440;
+        formattedString.writeln('$days day(s)');
+      }
+    }
+
+    return formattedString.toString();
   }
 }
