@@ -48,6 +48,7 @@ class _FriendsState extends State<Friends> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
@@ -187,7 +188,7 @@ class _FriendsState extends State<Friends> {
             },
             child: GestureDetector(
               onTap: () {
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
                     MaterialPageRoute(builder: (context) => Account(userID: friend['uid']!)),
                   );
@@ -198,11 +199,11 @@ class _FriendsState extends State<Friends> {
                 height: 125,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.8),
+                  color: Colors.cyan.shade800.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.5),
+                      color: Colors.white.withOpacity(0.5),
                       spreadRadius: 5,
                       blurRadius: 7,
                       offset: const Offset(0, 2),

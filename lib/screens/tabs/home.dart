@@ -52,6 +52,7 @@ class _HomeState extends State<Home>{
     String formattedDate = DateFormat('EEEE, d MMMM').format(currentDate);
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         resizeToAvoidBottomInset: false,
         body: Stack(

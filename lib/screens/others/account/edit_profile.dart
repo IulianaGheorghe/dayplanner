@@ -134,6 +134,7 @@ class _EditProfileState extends State<EditProfile>{
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         popupMenuTheme: PopupMenuThemeData(
           color: Colors.white.withOpacity(0.8),

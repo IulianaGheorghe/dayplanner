@@ -128,6 +128,15 @@ class _TasksListState extends State<TasksList> {
           return timeComparison;
         });
       }
+      tasksData.sort((a, b) {
+        if (a['status'] == 'Done' && b['status'] != 'Done') {
+          return 1;
+        } else if (a['status'] != 'Done' && b['status'] == 'Done') {
+          return -1;
+        } else {
+          return 0;
+        }
+      });
     });
   }
 
@@ -233,16 +242,16 @@ class _TasksListState extends State<TasksList> {
                                   subtitle: widget.onCalendarPage
                                       ? Text(DateFormat('EEEE, d MMMM').format(task['date']))
                                       : null,
-                                  trailing: widget.onCalendarPage
-                                      ? null
-                                      : Transform.scale(
+                                  trailing: Transform.scale(
                                     scale: 1.5,
                                     child: Checkbox(
                                       checkColor: Colors.white,
                                       activeColor: primaryColor,
                                       shape: const CircleBorder(),
                                       value: isChecked,
-                                      onChanged: (value) =>
+                                      onChanged: widget.onCalendarPage
+                                          ? null
+                                          : (value) =>
                                           setState(() {
                                             isChecked = value;
                                             task['status'] = (isChecked == true)
@@ -253,6 +262,7 @@ class _TasksListState extends State<TasksList> {
                                                 DateFormat('yyyy-MM-dd').format(task['date']),
                                                 task['status']
                                             );
+                                            _sortTasks();
                                           }),
                                     ),
                                   ),

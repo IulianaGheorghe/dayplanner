@@ -111,6 +111,7 @@ class _AccountState extends State<Account>{
       isCurrentUserProfile = false;
     }
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         popupMenuTheme: PopupMenuThemeData(
           color: Colors.white.withOpacity(0.8),
@@ -179,7 +180,7 @@ class _AccountState extends State<Account>{
                                 buildProfile(isCurrentUserProfile),
                                 buildBarChart(),
                                 const SizedBox(height: 20),
-                                buildPieChart(),
+                                buildPieChart(isCurrentUserProfile),
                                 const SizedBox(height: 20),
                               ]
                           ),
@@ -315,7 +316,7 @@ class _AccountState extends State<Account>{
   }
 
   int touchedIndex = -1;
-  Widget buildPieChart() {
+  Widget buildPieChart(bool isCurrentUserProfile) {
     return Container(
       width: MediaQuery.of(context).size.width - 30,
       decoration: BoxDecoration(
@@ -417,7 +418,9 @@ class _AccountState extends State<Account>{
                             padding: const EdgeInsets.symmetric(vertical: 4.0),
                             child: Indicator(
                               color: category['color'],
-                              text: '${category['name']}: ${category['tasksCount']}',
+                              text: isCurrentUserProfile
+                                  ? '${category['name']}: ${category['tasksCount']}'
+                                  : '${category['name']}',
                               isSquare: true,
                             ),
                           );
