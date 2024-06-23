@@ -69,7 +69,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     foregroundColor: buttonTextColor,
                     elevation: 15
                 ),
-                child: const Text("Log in"),
+                child: const Text("Log in", key: Key('loginButton')),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
@@ -90,7 +90,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     foregroundColor: buttonTextColor,
                     elevation: 15
                 ),
-                child: const Text("Sign up"),
+                child: const Text("Sign up", key: Key('signupButton')),
               ),
             ],
           ),

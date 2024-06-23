@@ -52,6 +52,7 @@ Text titleStyle(String title, double size, TextAlign textAlignment) {
         fontFamily: font1,
       ),
     textAlign: textAlignment,
+    key: const Key('title'),
   );
 }
 

@@ -108,6 +108,7 @@ class _HomeState extends State<Home>{
                                     foregroundColor: buttonTextColor,
                                     elevation: 10
                                 ),
+                                key: const Key('newTaskButton'),
                                 child: const Row(
                                   children: [
                                     Icon(

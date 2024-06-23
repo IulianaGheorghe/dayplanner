@@ -15,10 +15,10 @@ class MyBottomNavigationBar extends StatefulWidget {
   const MyBottomNavigationBar({super.key, required this.index, this.selectedCalendarDate});
 
   @override
-  State<MyBottomNavigationBar> createState() => _MyBottomNavigationBarState();
+  State<MyBottomNavigationBar> createState() => MyBottomNavigationBarState();
 }
 
-class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
+class MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
   String userID = '';
   late int index;
   bool isLoading = false;
